@@ -6,7 +6,9 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
+use Filament\Navigation\NavigationItem;
 use Rupadana\ApiService\ApiServicePlugin;
 use Filament\Http\Middleware\Authenticate;
 use Rmsramos\Activitylog\ActivitylogPlugin;
@@ -61,7 +63,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 ApiServicePlugin::make(),
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
                 ActivitylogPlugin::make()
                 ->navigationGroup('User Management')
                 ->navigationIcon('mdi-shield-account-outline')
@@ -70,10 +72,19 @@ class AdminPanelProvider extends PanelProvider
                 ,
             ])
             ->sidebarCollapsibleOnDesktop()
-            ->resources([
-                RoleResource::class,
-            ])
-            ->databaseNotifications();
+            // ->resources([
+            //     RoleResource::class,
+            // ])
+            ->databaseNotifications()
+            ->navigationItems([
+                NavigationItem::make('Messenger')
+                    ->url(url('messenger'), shouldOpenInNewTab: true)
+                    ->icon('heroicon-o-chat-bubble-left-right')
+                    ->badge(
+                        fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
+                    )
+                    ->sort(1),
+            ]);
             // ->plugin(ChatifyPlugin::make());
 
     }

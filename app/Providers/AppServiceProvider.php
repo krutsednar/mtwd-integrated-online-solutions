@@ -37,9 +37,12 @@ class AppServiceProvider extends ServiceProvider
                 'MCIS',
                 'MOCA',
                 'executive',
-                'admin',
+                // 'admin',
 
             ])
+            ->visible(fn (): bool => auth()->user()?->hasAnyRole([
+                'super_admin',
+            ]))
             // ->heading('MTWD Online Information Systems')
             ->modalWidth('sm')
             ->slideOver()

@@ -11,16 +11,16 @@ use Spatie\Permission\Models\Role;
 use Filament\Notifications\Notification;
 use Spatie\Permission\Models\Permission;
 use Filament\Forms\Components\CheckboxList;
-use App\Filament\Resources\UserRolesResource\Pages;
+use App\Filament\Resources\UserRoleResource\Pages;
 use Filament\Forms\Components\Actions\Action;
 
-class UserRolesResource extends Resource
+class UserRoleResource extends Resource
 {
     protected static ?string $model = Role::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-user-group';
     protected static ?string $navigationGroup = 'Admin Management';
-    protected static ?string $slug = 'user-roles';
+    protected static ?string $slug = 'user-role';
 
     public static function form(Form $form): Form
     {
@@ -39,49 +39,6 @@ class UserRolesResource extends Resource
                         'api' => 'API',
                     ])
                     ->label('Guard'),
-
-                    // Forms\Components\Select::make('permissions')
-                    // ->label('Permissions')
-                    // ->multiple()
-                    // ->options(function () {
-                    //     return Permission::all()
-                    //         ->sortBy('name')
-                    //         ->groupBy(function ($permission) {
-                    //             return explode('.', $permission->name)[0] ?? 'General';
-                    //         })
-                    //         ->map(function ($permissions, $group) {
-                    //             return $permissions->mapWithKeys(function ($permission) {
-                    //                 return [$permission->id => $permission->name];
-                    //             })->toArray();
-                    //         })
-                    //         ->toArray()
-                    //         ;
-                    // })
-                    // ->columns(2)
-                    // ->searchable(),
-
-                    // CheckboxList::make('permissions')
-                    // ->label('Permissions')
-                    // ->relationship('permissions', 'name') // Assuming you're using Spatie's hasMany relationship
-                    // // ->options(function () {
-                    // //     return Permission::all()
-                    // //         ->sortBy('name')
-                    // //         ->groupBy(function ($permission) {
-                    // //             return ucfirst(str_replace('_', ' ', explode('.', $permission->name)[0] ?? 'General'));
-                    // //         })
-                    // //         ->map(function ($groupedPermissions) {
-                    // //             return $groupedPermissions->mapWithKeys(function ($permission) {
-                    // //                 return [$permission->id => ucfirst(str_replace('_', ' ', $permission->name))];
-                    // //             })->toArray();
-                    // //         })
-                    // //         ->toArray();
-                    // // })
-                    // ->columns(2)
-                    // ->selectAllAction(
-                    //     fn (Action $action) => $action->label('Select all technologies'),
-                    // )
-                    // ,
-
                     CheckboxList::make('permissions')
                     ->label('Permissions')
                     ->options(function () {

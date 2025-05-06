@@ -1,13 +1,13 @@
 <?php
 
-namespace App\Filament\Resources\UserRolesResource\Pages;
+namespace App\Filament\Resources\UserRoleResource\Pages;
 
-use App\Filament\Resources\UserRolesResource;
+use App\Filament\Resources\UserRoleResource;
 use Filament\Resources\Pages\EditRecord;
 
 class EditUserRole extends EditRecord
 {
-    protected static string $resource = UserRolesResource::class;
+    protected static string $resource = UserRoleResource::class;
 
     protected function mutateFormDataBeforeSave(array $data): array
     {
