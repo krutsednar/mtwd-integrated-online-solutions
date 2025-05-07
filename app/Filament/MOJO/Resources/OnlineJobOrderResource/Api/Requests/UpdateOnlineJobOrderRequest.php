@@ -22,22 +22,22 @@ class UpdateOnlineJobOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'jo_number' => 'required',
-			'date_requested' => 'required',
-			'account_number' => 'required',
-			'registered_name' => 'required',
-			'meter_number' => 'required',
-			'job_order_code' => 'required',
-			'address' => 'required',
-			'town' => 'required',
-			'barangay' => 'required',
-			'requested_by' => 'required',
-			'contact_number' => 'required',
-			'email' => 'required',
-			'mode_received' => 'required',
-			'remarks' => 'required|string',
-			'processed_by' => 'required',
-			'deleted_at' => 'required',
+			// 'jo_number' => 'required',
+			// 'date_requested' => 'required',
+			// 'account_number' => 'required',
+			// 'registered_name' => 'required',
+			// 'meter_number' => 'required',
+			// 'job_order_code' => 'required',
+			// 'address' => 'required',
+			// 'town' => 'required',
+			// 'barangay' => 'required',
+			// 'requested_by' => 'required',
+			// 'contact_number' => 'required',
+			// 'email' => 'required',
+			// 'mode_received' => 'required',
+			// 'remarks' => 'required|string',
+			// 'processed_by' => 'required',
+			// 'deleted_at' => 'required',
 			'status' => 'required'
 		];
     }

@@ -40,7 +40,8 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'email',
         'mode_received',
         'remarks',
-        'processed_by'
+        'processed_by',
+        'status'
     ];
 
 
