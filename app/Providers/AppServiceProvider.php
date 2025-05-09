@@ -2,15 +2,17 @@
 
 namespace App\Providers;
 
+use Laravel\Passport\Passport;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use App\Http\Responses\LogoutResponse;
 use Illuminate\Support\ServiceProvider;
 use BezhanSalleh\FilamentShield\Commands;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentView;
 use BezhanSalleh\FilamentShield\FilamentShield;
-use App\Http\Responses\LogoutResponse;
+use Carbon\CarbonInterval;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 
 class AppServiceProvider extends ServiceProvider
@@ -21,6 +23,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
+
+        Passport::ignoreRoutes();
     }
 
     /**
@@ -90,5 +94,17 @@ class AppServiceProvider extends ServiceProvider
         Gate::guessPolicyNamesUsing(function (string $modelClass) {
             return str_replace('Models', 'Policies', $modelClass) . 'Policy';
         });
+
+        // Passport::$keyPath = storage_path();
+
+        // Passport::loadKeysFrom(__DIR__.'/../secrets/oauth');
+
+        // Passport::tokensExpireIn(CarbonInterval::days(15));
+        // Passport::refreshTokensExpireIn(CarbonInterval::days(30));
+        // Passport::personalAccessTokensExpireIn(CarbonInterval::years(3));
+
+
+
+
     }
 }

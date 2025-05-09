@@ -4,7 +4,7 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
-use Laravel\Sanctum\HasApiTokens;
+// use Laravel\Sanctum\HasApiTokens;
 use Namu\WireChat\Traits\Chatable;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -14,8 +14,10 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Passport\Contracts\OAuthenticatable;
+use Laravel\Passport\HasApiTokens;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements FilamentUser, OAuthenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;

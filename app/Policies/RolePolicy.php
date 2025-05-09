@@ -15,7 +15,7 @@ class RolePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_user::roles');
+        return $user->can('view_any_user::role');
     }
 
     /**
@@ -23,7 +23,7 @@ class RolePolicy
      */
     public function view(User $user, Role $role): bool
     {
-        return $user->can('view_user::roles');
+        return $user->can('view_user::role');
     }
 
     /**
@@ -31,7 +31,7 @@ class RolePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_user::roles');
+        return $user->can('create_user::role');
     }
 
     /**
@@ -39,7 +39,7 @@ class RolePolicy
      */
     public function update(User $user, Role $role): bool
     {
-        return $user->can('update_user::roles');
+        return $user->can('update_user::role');
     }
 
     /**
@@ -47,7 +47,7 @@ class RolePolicy
      */
     public function delete(User $user, Role $role): bool
     {
-        return $user->can('delete_user::roles');
+        return $user->can('delete_user::role');
     }
 
     /**
@@ -55,7 +55,7 @@ class RolePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_user::roles');
+        return $user->can('delete_any_user::role');
     }
 
     /**
@@ -63,7 +63,7 @@ class RolePolicy
      */
     public function forceDelete(User $user, Role $role): bool
     {
-        return $user->can('force_delete_user::roles');
+        return $user->can('force_delete_user::role');
     }
 
     /**
@@ -71,7 +71,7 @@ class RolePolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_user::roles');
+        return $user->can('force_delete_any_user::role');
     }
 
     /**
@@ -79,7 +79,7 @@ class RolePolicy
      */
     public function restore(User $user, Role $role): bool
     {
-        return $user->can('restore_user::roles');
+        return $user->can('restore_user::role');
     }
 
     /**
@@ -87,7 +87,7 @@ class RolePolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_user::roles');
+        return $user->can('restore_any_user::role');
     }
 
     /**
@@ -95,7 +95,7 @@ class RolePolicy
      */
     public function replicate(User $user, Role $role): bool
     {
-        return $user->can('replicate_user::roles');
+        return $user->can('replicate_user::role');
     }
 
     /**
@@ -103,6 +103,6 @@ class RolePolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_user::roles');
+        return $user->can('reorder_user::role');
     }
 }

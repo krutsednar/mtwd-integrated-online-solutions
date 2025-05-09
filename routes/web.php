@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Redirect;
 
-// Route::view('/', 'welcome');
+// Route::view('/', 'home/login');
+Route::redirect('/', url('home/login'));
 
 // Route::view('dashboard', 'dashboard')
 //     ->middleware(['auth', 'verified'])
