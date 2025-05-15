@@ -3,46 +3,48 @@ name: 🚀 Deploy Laravel App to cPanel via SSH
 on:
   push:
     branches:
-      - main  # Change to your default branch if different
+      - main # Change to your default branch if different
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: 🛒 Checkout code
-      uses: actions/checkout@v4
+      - name: 🛒 Checkout code
+        uses: actions/checkout@v4
 
-    - name: 🔐 Setup SSH
-      run: |
-        mkdir -p ~/.ssh
-        echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
-        chmod 600 ~/.ssh/id_ed25519
-        ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
+      - name: 🔐 Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-    - name: 📂 Deploy via SCP
-      run: |
-        rsync -avz --delete \
-          --exclude=".env" \
-          --exclude="vendor" \
-          --exclude="node_modules" \
-          ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
+      - name: 📂 Deploy via SCP
+        run: |
+          rsync -avz --delete \
+            --exclude=".env" \
+            --exclude="vendor" \
+            --exclude="node_modules" \
+            ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
 
-    - name: 🛠️ Run post-deploy commands
-      run: |
-        ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
-          cd ${{ secrets.DEPLOY_PATH }}
-          php artisan down || true
-          /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
-          php artisan migrate --force
-          php artisan config:clear
-          php artisan config:cache
-          php artisan route:cache
-          php artisan view:clear
-          php artisan view:cache
-          php artisan livewire:discover
-          php artisan filament:cache
-          php artisan optimize
-          php artisan icons:cache
-          php artisan up
-        EOF
+      - name: 🛠️ Run post-deploy commands
+        run: |
+          ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
+            cd ${{ secrets.DEPLOY_PATH }}
+            php artisan down || true
+            /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
+            npm install
+            npm run build
+            php artisan migrate --force
+            php artisan config:clear
+            php artisan config:cache
+            php artisan route:cache
+            php artisan view:clear
+            php artisan view:cache
+            php artisan livewire:discover
+            php artisan filament:cache
+            php artisan optimize
+            php artisan icons:cache
+            php artisan up
+          EOF
