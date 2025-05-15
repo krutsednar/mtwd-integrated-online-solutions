@@ -1,9 +1,9 @@
-name: 🚀 Deploy Laravel App to cPanel via SSH
+name: 🚀 Deploy Laravel + Livewire + FilamentPHP to cPanel via SSH
 
 on:
   push:
     branches:
-      - main # Change to your default branch if different
+      - master # Change to your production branch if different
 
 jobs:
   deploy:
@@ -20,32 +20,43 @@ jobs:
           chmod 600 ~/.ssh/id_ed25519
           ssh-keyscan -H ${{ secrets.SSH_HOST }} >> ~/.ssh/known_hosts
 
-      - name: 📂 Deploy via SCP
+      - name: 🧱 Install Composer dependencies (for deployment)
+        run: |
+          composer install --no-dev --optimize-autoloader
+
+      - name: 🛠️ Compile Assets (if using Vite)
+        run: |
+          npm ci
+          npm run build
+        # 💡 If your server can't run Node/Vite, commit `public/build` to repo and skip this
+
+      - name: 📂 Deploy via SCP (rsync)
         run: |
           rsync -avz --delete \
             --exclude=".env" \
-            --exclude=".htaccess" \
-            --exclude="vendor" \
             --exclude="node_modules" \
+            --exclude="vendor" \
+            --exclude=".git" \
+            --exclude=".htaccess" \
             ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:${{ secrets.DEPLOY_PATH }}
 
-      - name: 🛠️ Run post-deploy commands
+      - name: 🧩 Run Laravel Commands on cPanel + Conditionally Start Processes
         run: |
           ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} << 'EOF'
             cd ${{ secrets.DEPLOY_PATH }}
+
             php artisan down || true
-            /opt/cpanel/composer/bin/composer install --no-dev --optimize-autoloader
-            npm install
-            npm run build
+
             php artisan migrate --force
             php artisan config:clear
             php artisan config:cache
             php artisan route:cache
             php artisan view:clear
             php artisan view:cache
+            php artisan livewire:discover
             php artisan filament:cache
             php artisan optimize
-            php artisan icons:cache
+
             php artisan up
 
             echo "🔍 Checking if queue:work is already running..."
