@@ -47,4 +47,9 @@ jobs:
             php artisan optimize
             php artisan icons:cache
             php artisan up
+
+          nohup php artisan queue:work --queue=messages,default > storage/logs/queue.log 2>&1 &
+
+          nohup php artisan reverb:start > storage/logs/reverb.log 2>&1 &
+
           EOF
