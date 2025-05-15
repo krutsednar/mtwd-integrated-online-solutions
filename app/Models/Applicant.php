@@ -4,9 +4,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use \DateTimeInterface;
-use App\Traits\Auditable;
 use Spatie\MediaLibrary\HasMedia;
-use App\Support\HasAdvancedFilter;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
