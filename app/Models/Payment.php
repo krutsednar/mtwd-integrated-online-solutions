@@ -2,7 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use \DateTimeInterface;
+use App\Traits\Auditable;
+use App\Support\HasAdvancedFilter;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -21,7 +24,7 @@ class Payment extends Model
         ->logFillable();
     }
 
-    protected $connection = 'kitdb';
+    protected $connection = 'mcpdb';
 
     public $table = 'payments';
 

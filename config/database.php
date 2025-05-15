@@ -112,22 +112,6 @@ return [
             // 'trust_server_certificate' => env('DB_TRUST_SERVER_CERTIFICATE', 'false'),
         ],
 
-        'mepdb' => [
-            'driver' => 'mysql',
-            'host' => '127.0.0.1',
-            'port' => '3306',
-            'database' => env('DB_DATABASE_MEP', 'mepdb'),
-            'username' => env('DB_USERNAME_MEP', 'root'),
-            'password' => env('DB_PASSWORD_MEP', ''),
-            'unix_socket' => '',
-            'charset' => 'utf8mb4',
-            'collation' => 'utf8mb4_unicode_ci',
-            'prefix' => '',
-            'prefix_indexes' => true,
-            'strict' => true,
-            'engine' => null,
-        ],
-
         'kitdb' => [
             'driver' => 'mysql',
             'host' => '127.0.0.1',

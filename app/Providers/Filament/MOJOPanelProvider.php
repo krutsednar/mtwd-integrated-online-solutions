@@ -6,10 +6,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
-use Filament\Navigation\MenuItem;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
-use Rupadana\ApiService\ApiServicePlugin;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
@@ -28,11 +26,10 @@ class MOJOPanelProvider extends PanelProvider
         return $panel
             ->id('MOJO')
             ->path('MOJO')
-            ->favicon(asset('images/mtwdlogo.png'))
+            ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->sidebarCollapsibleOnDesktop()
             ->discoverResources(in: app_path('Filament/MOJO/Resources'), for: 'App\\Filament\\MOJO\\Resources')
             ->discoverPages(in: app_path('Filament/MOJO/Pages'), for: 'App\\Filament\\MOJO\\Pages')
             ->pages([
@@ -57,10 +54,6 @@ class MOJOPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ])
-            ->plugins([
-                ApiServicePlugin::make(),
-                // \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-            ])
             ->navigationItems([
                 NavigationItem::make('Messenger')
                     ->url(url('messenger'), shouldOpenInNewTab: true)
@@ -69,14 +62,6 @@ class MOJOPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ])
-            ->userMenuItems([
-                'Messenger' => MenuItem::make()->label('Messenger')
-                                ->url('http://localhost:8000/messenger')
-                                ->icon('heroicon-o-chat-bubble-left-right'),
-                'logout' => MenuItem::make()->label('Log out'),
-                // ...
             ]);
     }
-
 }

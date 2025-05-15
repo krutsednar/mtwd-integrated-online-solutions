@@ -15,7 +15,7 @@ return new class extends Migration
             $table->string('account_number');
             $table->string('registered_name');
             $table->string('meter_number');
-            $table->string('job_order_code');
+            $table->string('job_order_code')->unique();
             $table->string('address');
             $table->string('town');
             $table->string('barangay');
@@ -24,6 +24,8 @@ return new class extends Migration
             $table->string('mode_received');
             $table->text('remarks');
             $table->string('processed_by');
+            $table->string('status');
+            $table->string('is_online');
             $table->timestamps();
             $table->softDeletes();
         });

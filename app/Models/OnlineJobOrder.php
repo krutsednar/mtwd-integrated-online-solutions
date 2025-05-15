@@ -2,10 +2,7 @@
 
 namespace App\Models;
 
-use Log;
-use Carbon\Carbon;
 use Spatie\Activitylog\LogOptions;
-use Spatie\QueryBuilder\AllowedFilter;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -41,7 +38,8 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'mode_received',
         'remarks',
         'processed_by',
-        'status'
+        'status',
+        'is_online'
     ];
 
 
@@ -62,9 +60,5 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
             'jo_number',
         ];
     }
-
-
-
-
 
 }

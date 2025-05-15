@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use \DateTimeInterface;
+use App\Traits\Auditable;
+use App\Support\HasAdvancedFilter;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -22,7 +24,8 @@ class Statement extends Model
         ->logFillable();
     }
 
-    protected $connection = 'kitdb';
+
+    protected $connection = 'mcpdb';
 
     public $table = 'statements';
 
@@ -32,7 +35,6 @@ class Statement extends Model
         'account_name',
         'address',
         'classification',
-        'is_connected',
         'reading_date',
         'due_date',
         'previous_reading_cum',
@@ -60,7 +62,6 @@ class Statement extends Model
         'account_name',
         'address',
         'classification',
-        'is_connected',
         'reading_date',
         'due_date',
         'previous_reading_cum',
@@ -95,7 +96,6 @@ class Statement extends Model
         'account_name',
         'address',
         'classification',
-        'is_connected',
         'reading_date',
         'due_date',
         'previous_reading_cum',

@@ -135,13 +135,13 @@ class OnlineJobOrderResource extends Resource
     {
         return $table
             ->query(
-                OnlineJobOrder::query()->with('account')
+                OnlineJobOrder::query()->with('account')->orderBy('date_requested', 'desc')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('jo_number')
                 ->searchable(),
                 Tables\Columns\TextColumn::make('date_requested')
-                    ->dateTime(),
+                    ->dateTime('F d, Y'),
                 Tables\Columns\TextColumn::make('account_number')
                 ->searchable(),
                 IconColumn::make('account.latitude')

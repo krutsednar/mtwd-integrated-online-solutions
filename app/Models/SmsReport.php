@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use DateTimeInterface;
+use App\Traits\Auditable;
+use App\Support\HasAdvancedFilter;
 use Spatie\Activitylog\LogOptions;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\Activitylog\Traits\LogsActivity;
@@ -20,6 +22,9 @@ class SmsReport extends Model
         return LogOptions::defaults()
         ->logFillable();
     }
+
+
+    protected $connection = 'mepdb';
 
     public $table = 'sms_reports';
 
@@ -61,9 +66,9 @@ class SmsReport extends Model
         'status',
     ];
 
+
     public function getStatusLabelAttribute($value)
     {
         return static::STATUS_SELECT[$this->status] ?? null;
     }
-
 }

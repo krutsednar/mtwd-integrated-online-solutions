@@ -4,31 +4,27 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
-// use Laravel\Sanctum\HasApiTokens;
-use Namu\WireChat\Traits\Chatable;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Filament\Models\Contracts\FilamentUser;
 use Spatie\Activitylog\Traits\LogsActivity;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
-use Laravel\Passport\Contracts\OAuthenticatable;
-use Laravel\Passport\HasApiTokens;
+use Namu\WireChat\Traits\Chatable;
 
-class User extends Authenticatable implements FilamentUser, OAuthenticatable
+class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, Notifiable, SoftDeletes, HasRoles;
-    use Chatable;
+    use HasFactory, Notifiable;
+    use HasRoles;
     use LogsActivity;
+    use Chatable;
 
     public function getActivitylogOptions(): LogOptions
     {
         return LogOptions::defaults()
-        ->logFillable()
-        ->logOnlyDirty();
+        ->logFillable();
     }
 
     protected $dates = [
@@ -81,19 +77,25 @@ class User extends Authenticatable implements FilamentUser, OAuthenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_approved' => 'boolean',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
-        if ($panel === 'admin') {
-            return auth()->user()?->hasAnyRole([
-                'super_admin',
-            ]);
-        }
-
-        return $this->hasVerifiedEmail();
+        return $this->hasVerifiedEmail() && $this->is_approved;
     }
 
+    public function canCreateChats(): bool
+    {
+        return $this->hasVerifiedEmail() && $this->is_approved;
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (User $user) {
+            $user->is_approved = false;
+        });
+    }
 }

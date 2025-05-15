@@ -2,17 +2,12 @@
 
 namespace App\Providers;
 
-use Laravel\Passport\Passport;
 use Filament\View\PanelsRenderHook;
-use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use App\Http\Responses\LogoutResponse;
 use Illuminate\Support\ServiceProvider;
-use BezhanSalleh\FilamentShield\Commands;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentView;
-use BezhanSalleh\FilamentShield\FilamentShield;
-use Carbon\CarbonInterval;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,8 +18,6 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
-
-        Passport::ignoreRoutes();
     }
 
     /**
@@ -53,13 +46,13 @@ class AppServiceProvider extends ServiceProvider
             ->icons([
 
                 'home' => 'heroicon-o-home',
-                'HRIS' => 'fluentui-folder-people-24-o',
+                'HRIS' => 'fas-users-rectangle',
                 'MCIS' => 'css-user-list',
                 'MOJO' => 'mdi-pipe-leak',
-                'MOCA' => 'pepicon-cv',
+                'MOCA' => 'fas-user-plus',
                 'PFIS' => 'fas-arrow-up-from-water-pump',
-                'executive' => 'govicon-user-suit',
-                'admin' => 'eos-admin-o',
+                'executive' => 'fas-user-tie',
+                'admin' => 'fas-user-secret',
             ])
             ->iconSize(16)
             ->labels([
@@ -70,41 +63,10 @@ class AppServiceProvider extends ServiceProvider
             ->modalHeading('MTWD Information Systems');
         });
 
-        // RenderHook::register('panels::topbar.start', function () {
-        //     return '<button class="btn btn-primary">Custom Button</button>';
-        // });
-
         FilamentView::registerRenderHook(
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
             fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
             // return '<button class="btn btn-primary">Custom Button</button>',
         );
-
-        // FilamentShield::prohibitDestructiveCommands($this->app->isProduction());
-
-        $this->app->booted(function () {
-            app(FilamentShield::class)->configurePermissionIdentifierUsing(
-                fn ($resource) => str($resource::getModel())
-                    ->afterLast('\\')
-                    ->lower()
-                    ->toString()
-            );
-        });
-
-        Gate::guessPolicyNamesUsing(function (string $modelClass) {
-            return str_replace('Models', 'Policies', $modelClass) . 'Policy';
-        });
-
-        // Passport::$keyPath = storage_path();
-
-        // Passport::loadKeysFrom(__DIR__.'/../secrets/oauth');
-
-        // Passport::tokensExpireIn(CarbonInterval::days(15));
-        // Passport::refreshTokensExpireIn(CarbonInterval::days(30));
-        // Passport::personalAccessTokensExpireIn(CarbonInterval::years(3));
-
-
-
-
     }
 }

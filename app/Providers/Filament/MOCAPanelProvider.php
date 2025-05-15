@@ -26,6 +26,7 @@ class MOCAPanelProvider extends PanelProvider
         return $panel
             ->id('MOCA')
             ->path('MOCA')
+            ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -52,8 +53,7 @@ class MOCAPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->navigationItems([
+            ])->navigationItems([
                 NavigationItem::make('Messenger')
                     ->url(url('messenger'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-chat-bubble-left-right')

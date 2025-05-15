@@ -26,6 +26,7 @@ class PFISPanelProvider extends PanelProvider
         return $panel
             ->id('PFIS')
             ->path('PFIS')
+            ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -52,8 +53,7 @@ class PFISPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ])
-            ->navigationItems([
+            ])->navigationItems([
                 NavigationItem::make('Messenger')
                     ->url(url('messenger'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-chat-bubble-left-right')

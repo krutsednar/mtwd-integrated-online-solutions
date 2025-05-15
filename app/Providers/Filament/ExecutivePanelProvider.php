@@ -26,6 +26,7 @@ class ExecutivePanelProvider extends PanelProvider
         return $panel
             ->id('executive')
             ->path('executive')
+            ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
