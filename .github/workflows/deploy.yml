@@ -3,7 +3,7 @@ name: 🚀 Deploy Laravel App to cPanel via SSH
 on:
   push:
     branches:
-      - master  # Change to your default branch if different
+      - main  # Change to your default branch if different
 
 jobs:
   deploy:
