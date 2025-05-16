@@ -39,11 +39,17 @@ class OnlineJobOrderResource extends Resource
     {
         return $form
             ->schema([
+                // Forms\Components\TextInput::make('jo_number')
+                //     ->label('JO Number')
+                //     ->required(true)
+                //     ->default('MOJO'.Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT))
+                //     ->readOnly(),
                 Forms\Components\TextInput::make('jo_number')
                     ->label('JO Number')
-                    ->required(true)
-                    ->default('MOJO'.Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 5, '0', STR_PAD_LEFT))
-                    ->readOnly(),
+                    ->required()
+                    ->readOnly()
+                    ->reactive()
+                    ->placeholder(Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT)),
                 Forms\Components\DateTimePicker::make('date_requested')
                     ->required(true)
                     ->default(Carbon::now()),
@@ -79,11 +85,26 @@ class OnlineJobOrderResource extends Resource
                     ->required(true),
                 Forms\Components\Select::make('town')
                     ->required(true)->options(function () {
-                        return DB::connection('kitdb')->table('cities')->whereIn('id', ['21527', '21520', '21529'])->pluck('name', 'id')->toArray();
+                        return DB::connection('kitdb')->table('cities')->whereIn('id', ['21529', '21527', '21520'])->pluck('name', 'id')->toArray();
                     })
                     ->searchable()
                     ->reactive()
-                    ->live(),
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        // Determine prefix based on selected town
+                        $prefix = match ($state) {
+                            '21527' => 'SO',
+                            '21520' => 'PO',
+                            '21529' => 'TO',
+                            default => 'MOJO',
+                        };
+
+                        $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
+                        $suffix = str_pad($count, 7, '0', STR_PAD_LEFT);
+                        $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
+
+                        $set('jo_number', $joNumber);
+                    }),
                 Forms\Components\Select::make('barangay')
                     ->required(true)
                     ->options(fn (Get $get): Collection => DB::connection('kitdb')->table('barangays')
