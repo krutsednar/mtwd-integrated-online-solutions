@@ -27,7 +27,7 @@ jobs:
       - name: 🛠️ Compile Assets (if using Vite)
         run: |
           npm ci
-          vite build
+          npm build
         # 💡 If your server can't run Node/Vite, commit `public/build` to repo and skip this
 
       - name: 📂 Deploy via SCP (rsync)
