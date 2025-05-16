@@ -62,7 +62,7 @@ jobs:
             echo "🔍 Checking if reverb:start is already running..."
             if ! pgrep -f "artisan reverb:start"; then
               echo "▶️ Starting reverb:start..."
-              nohup php artisan reverb:start > storage/logs/reverb.log 2>&1 &
+              nohup php artisan reverb:start --port=8888 > storage/logs/reverb.log 2>&1 &
             else
               echo "✅ reverb:start is already running."
             fi
