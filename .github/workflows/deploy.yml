@@ -48,17 +48,12 @@ jobs:
             php artisan down || true
 
             php artisan migrate --force
-            php artisan config:clear
-            php artisan config:cache
-            php artisan route:cache
-            php artisan view:clear
-            php artisan view:cache
-            php artisan livewire:discover
-            php artisan filament:cache
-            php artisan optimize
+            php artisan optimize:clear
+            php artisan filament:optimize-clear
+            php artisan icons:cache
 
 
-            # php artisan up
+            php artisan up
 
             # echo "🔍 Checking if reverb:start is already running..."
             # if ! pgrep -f "artisan reverb:start"; then
