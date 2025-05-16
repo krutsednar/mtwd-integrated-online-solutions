@@ -58,22 +58,22 @@ jobs:
             php artisan optimize
 
 
-            php artisan up
+            # php artisan up
 
-            echo "🔍 Checking if reverb:start is already running..."
-            if ! pgrep -f "artisan reverb:start"; then
-              echo "▶️ Starting reverb:start..."
-              nohup php artisan reverb:start --host=mios.mtwd-kit.ph --port=8888 > storage/logs/reverb.log 2>&1 &
-            else
-              echo "✅ reverb:start is already running."
-            fi
+            # echo "🔍 Checking if reverb:start is already running..."
+            # if ! pgrep -f "artisan reverb:start"; then
+            #   echo "▶️ Starting reverb:start..."
+            #   nohup php artisan reverb:start --host=mios.mtwd-kit.ph --port=8888 > storage/logs/reverb.log 2>&1 &
+            # else
+            #   echo "✅ reverb:start is already running."
+            # fi
 
-            echo "🔍 Checking if queue:work is already running..."
-            if ! pgrep -f "artisan queue:work"; then
-              echo "▶️ Starting queue:work..."
-              nohup php artisan queue:work --queue=messages,default > storage/logs/queue.log 2>&1 &
-            else
-              echo "✅ queue:work is already running."
-            fi
+            # echo "🔍 Checking if queue:work is already running..."
+            # if ! pgrep -f "artisan queue:work"; then
+            #   echo "▶️ Starting queue:work..."
+            #   nohup php artisan queue:work --queue=messages,default > storage/logs/queue.log 2>&1 &
+            # else
+            #   echo "✅ queue:work is already running."
+            # fi
 
           EOF

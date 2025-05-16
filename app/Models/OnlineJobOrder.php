@@ -58,6 +58,7 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         return [
             'created_at',
             'jo_number',
+            'is_online',
         ];
     }
 
