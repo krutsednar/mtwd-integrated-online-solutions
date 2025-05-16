@@ -39,11 +39,7 @@ class OnlineJobOrderResource extends Resource
     {
         return $form
             ->schema([
-                // Forms\Components\TextInput::make('jo_number')
-                //     ->label('JO Number')
-                //     ->required(true)
-                //     ->default('MOJO'.Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT))
-                //     ->readOnly(),
+
                 Forms\Components\TextInput::make('jo_number')
                     ->label('JO Number')
                     ->required()
