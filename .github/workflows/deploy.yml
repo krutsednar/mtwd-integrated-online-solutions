@@ -63,12 +63,12 @@ jobs:
             #   echo "✅ reverb:start is already running."
             # fi
 
-            # echo "🔍 Checking if queue:work is already running..."
-            # if ! pgrep -f "artisan queue:work"; then
-            #   echo "▶️ Starting queue:work..."
-            #   nohup php artisan queue:work --queue=messages,default > storage/logs/queue.log 2>&1 &
-            # else
-            #   echo "✅ queue:work is already running."
-            # fi
+            echo "🔍 Checking if queue:work is already running..."
+            if ! pgrep -f "artisan queue:work"; then
+              echo "▶️ Starting queue:work..."
+              nohup php artisan queue:work --queue=messages,default > storage/logs/queue.log 2>&1 &
+            else
+              echo "✅ queue:work is already running."
+            fi
 
           EOF
