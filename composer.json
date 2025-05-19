@@ -9,6 +9,7 @@
         "php": "^8.2",
         "bezhansalleh/filament-panel-switch": "^1.0",
         "bezhansalleh/filament-shield": "^3.3",
+        "cheesegrits/filament-google-maps": "^3.0",
         "filament/filament": "3.3",
         "filament/tables": "3.3",
         "khatabwedaa/blade-css-icons": "^1.5",
