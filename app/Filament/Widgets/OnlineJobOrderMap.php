@@ -128,6 +128,15 @@ class OnlineJobOrderMap extends MapTableWidget
 			// 	->section('Radius Filter')
 			// 	->selectUnit(),
             MapIsFilter::make('map'),
+            SelectFilter::make('status')
+            ->label('Status')
+            ->options(fn () => OnlineJobOrder::query()
+            ->distinct()
+            ->pluck('status', 'status')
+            ->filter()
+            ->toArray())
+            ->placeholder('All Statuses')
+            ->searchable(),
             Filter::make('date_requested')
                 ->form([
                     DatePicker::make('start_date')
