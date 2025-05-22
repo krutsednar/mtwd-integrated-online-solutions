@@ -22,18 +22,18 @@ class ListOnlineJobOrders extends ListRecords
             Actions\CreateAction::make()
             ->label('Create Job Order')
             ->color('info')
-            ->after(function (OnlineJobOrder $record) {
-            $account = Account::where('accmasterlist', $record->account_number)
-                ->whereNotNull('latitude')
-                ->first();
+            // ->after(function (OnlineJobOrder $record) {
+            //     $account = Account::where('accmasterlist', $record->account_number)
+            //         ->whereNotNull('latitude')
+            //         ->first();
 
-            if ($account) {
-                $record->lat = $account->latitude;
-                $record->lng = $account->longtitude;
-                $record->save();
-            }
-
-            }),
+            //     if ($account) {
+            //         $record->lat = $account->latitude;
+            //         $record->lng = $account->longtitude;
+            //         $record->save();
+            //     }
+            // })
+            ,
             // ->after(function (OnlineJobOrder $record) {
             //     $jocode  = JobOrderCode::where('code', $record->job_order_code)->get();
             //     $divcode = Division::where('code', $jocode->value('division_code'));
