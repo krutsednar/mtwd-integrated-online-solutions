@@ -26,7 +26,7 @@ class JobOrderOverview extends BaseWidget
             Stat::make('Total Ongoing Job Orders', number_format($totalOngoing))
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('warning'),
-            Stat::make('Average Monthly Job Orders', floor($averagePerMonth))
+            Stat::make('Average Monthly Job Orders', number_format(floor($averagePerMonth)))
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('info'),
         ];

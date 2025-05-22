@@ -4,6 +4,7 @@ namespace App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
 
 use Filament\Actions;
 use GuzzleHttp\Client;
+use App\Models\Account;
 use App\Models\Division;
 use App\Models\JobOrderCode;
 use App\Models\OnlineJobOrder;
@@ -21,6 +22,18 @@ class ListOnlineJobOrders extends ListRecords
             Actions\CreateAction::make()
             ->label('Create Job Order')
             ->color('info')
+            ->after(function (OnlineJobOrder $record) {
+            $account = Account::where('accmasterlist', $record->account_number)
+                ->whereNotNull('latitude')
+                ->first();
+
+            if ($account) {
+                $record->lat = $account->latitude;
+                $record->lng = $account->longtitude;
+                $record->save();
+            }
+
+            }),
             // ->after(function (OnlineJobOrder $record) {
             //     $jocode  = JobOrderCode::where('code', $record->job_order_code)->get();
             //     $divcode = Division::where('code', $jocode->value('division_code'));
