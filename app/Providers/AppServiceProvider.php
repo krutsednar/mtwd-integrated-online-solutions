@@ -66,7 +66,10 @@ class AppServiceProvider extends ServiceProvider
         FilamentView::registerRenderHook(
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
             fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
-            // return '<button class="btn btn-primary">Custom Button</button>',
+        );
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SIDEBAR_FOOTER,
+            fn (): string => Blade::render('@livewire(\'buttons.logout\')'),
         );
     }
 }

@@ -9,7 +9,11 @@ use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\Widgets\OnlineJobOrderMap;
+use App\Filament\MOJO\Widgets\JobOrdersChart;
+use App\Filament\MOJO\Widgets\JobOrderOverview;
 use Illuminate\Session\Middleware\StartSession;
+use App\Filament\MOJO\Widgets\JobOrdersPerMonth;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
 use Illuminate\Routing\Middleware\SubstituteBindings;
@@ -18,6 +22,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 
 class MOJOPanelProvider extends PanelProvider
 {
@@ -37,7 +42,10 @@ class MOJOPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/MOJO/Widgets'), for: 'App\\Filament\\MOJO\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                // Widgets\AccountWidget::class,
+                JobOrderOverview::class,
+
+                OnlineJobOrderMap::class,
                 // Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
@@ -62,6 +70,12 @@ class MOJOPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ]);
+
+            ])
+            ->plugins([
+            FilamentApexChartsPlugin::make()
+            ])
+            ->sidebarCollapsibleOnDesktop();
+
     }
 }

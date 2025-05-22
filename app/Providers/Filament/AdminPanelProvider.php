@@ -78,7 +78,8 @@ class AdminPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ]);
+            ])
+            ->sidebarCollapsibleOnDesktop();
 
     }
 }
