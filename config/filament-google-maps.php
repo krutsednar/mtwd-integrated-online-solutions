@@ -80,5 +80,5 @@ return [
     | may be needed if your app is behind a reverse proxy.
     */
 
-    'force-https' => env('FILAMENT_GOOGLE_MAPS_FORCE_HTTPS', false),
+    'force-https' => env('FILAMENT_GOOGLE_MAPS_FORCE_HTTPS', true),
 ];

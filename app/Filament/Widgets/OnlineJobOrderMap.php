@@ -243,4 +243,9 @@ class OnlineJobOrderMap extends MapTableWidget
 			})
 			->modalSubmitAction(false);
 	}
+
+    protected function getTableRecordsPerPageSelectOptions(): array
+    {
+        return [10000, 25, 50, 100];
+    }
 }
