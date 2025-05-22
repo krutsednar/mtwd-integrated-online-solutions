@@ -64,9 +64,9 @@ class OnlineJobOrderResource extends Resource
                             $set('meter_number', 'No Record');
                         }
 
-                        if (!is_null($data->latitude)) {
-                            $set('lat', $data->latitude);
-                            $set('lng', $data->longtitude);
+                        if ($data && !is_null($data->latitude)) {
+                            $set('lat', $data->latitude ?? null);
+                            $set('lng', $data->longtitude ?? null);
                         } else {
                             $set('lat', null);
                             $set('lng', null);
@@ -74,9 +74,11 @@ class OnlineJobOrderResource extends Resource
 
                     }),
                 Forms\Components\TextInput::make('lat')
-                    ->readOnly(),
+                    ->readOnly()
+                    ->hidden(),
                 Forms\Components\TextInput::make('lng')
-                    ->readOnly(),
+                    ->readOnly()
+                    ->hidden(),
                 Forms\Components\TextInput::make('registered_name')
                     ->readOnly(),
                 Forms\Components\TextInput::make('meter_number')
