@@ -12,6 +12,7 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Namu\WireChat\Traits\Chatable;
+use Carbon\Carbon;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -84,12 +85,14 @@ class User extends Authenticatable implements FilamentUser
     public function canAccessPanel(Panel $panel): bool
     {
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
-        return $this->hasVerifiedEmail() && $this->is_approved;
+        // return $this->hasVerifiedEmail() && $this->is_approved;
+        return $this->is_approved;
     }
 
     public function canCreateChats(): bool
     {
-        return $this->hasVerifiedEmail() && $this->is_approved;
+        // return $this->hasVerifiedEmail() && $this->is_approved;
+        return  $this->is_approved;
     }
 
     protected static function booted(): void

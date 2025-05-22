@@ -37,9 +37,9 @@ class AppServiceProvider extends ServiceProvider
                 // 'admin',
 
             ])
-            ->visible(fn (): bool => auth()->user()?->hasAnyRole([
-                'super_admin',
-            ]))
+            // ->visible(fn (): bool => auth()->user()?->hasAnyRole([
+            //     'super_admin',
+            // ]))
             // ->heading('MTWD Online Information Systems')
             ->modalWidth('sm')
             ->slideOver()

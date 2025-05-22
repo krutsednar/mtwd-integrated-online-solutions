@@ -51,8 +51,9 @@ class UserResource extends Resource
                     ->required()
                     ->label('Username (ex: ICTD-Kurt'),
                 Forms\Components\DatePicker::make('birthday')
-                ->required()
-                ->format('m/d/Y'),
+                        ->displayFormat('F d, Y')
+                        ->native(false)
+                        ->required(),
                 Forms\Components\Select::make('division')
                     ->options([
                         'OGM'     => 'Office of the General Manager',
@@ -100,7 +101,10 @@ class UserResource extends Resource
                     ->maxLength(255)
                     ->default(null),
                 Forms\Components\Toggle::make('is_approved'),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
+                Forms\Components\DateTimePicker::make('email_verified_at')
+                        ->displayFormat('F d, Y H:i:s')
+                        ->native(false)
+                        ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->afterStateHydrated(function (Forms\Components\TextInput $component, $state) {

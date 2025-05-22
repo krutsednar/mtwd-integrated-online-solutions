@@ -77,7 +77,8 @@ class Register extends BaseRegister
     protected function getBirthdayFormComponent(): Component
     {
         return DatePicker::make('birthday')
-            ->format('d/m/Y')
+            ->displayFormat('F d, Y')
+            ->native(false)
             ->required();
     }
     protected function getDivisionFormComponent(): Component
@@ -116,11 +117,9 @@ class Register extends BaseRegister
     {
         return TextInput::make('mobile_number')
             // ->length(10)
-            ->minLength(10)
-            ->maxLength(10)
-            ->numeric()
+            ->required(true)
             ->prefix('+63')
-            ->required();
+            ->maxLength(10);
     }
     protected function getIsApprovedFormComponent(): Component
     {
