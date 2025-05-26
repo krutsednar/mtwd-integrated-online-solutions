@@ -1,0 +1,35 @@
+<?php
+
+namespace App\Models;
+
+use Spatie\Activitylog\LogOptions;
+use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\Traits\LogsActivity;
+use Illuminate\Database\Eloquent\SoftDeletes;
+
+class JoAccomplishment extends Model
+{
+    use SoftDeletes;
+    use LogsActivity;
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+        ->logFillable();
+    }
+
+    protected $fillable = [
+        'jo_number',
+        'jo_user',
+    ];
+
+    public function jo_number()
+    {
+        return $this->belongsTo(OnlineJobOrder::class, 'jo_number', 'jo_number');
+    }
+
+    public function jo_users()
+    {
+        return $this->hasMany(Username::class, 'jo_user', 'code');
+    }
+}

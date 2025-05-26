@@ -22,6 +22,17 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         ->logFillable();
     }
 
+    protected $dates = [
+        'created_at',
+        'updated_at',
+        'deleted_at',
+        'date_forwarded',
+        'date_received',
+        'date_dispatched',
+        'date_accomplished',
+        'date_verified',
+    ];
+
     protected $fillable = [
         'jo_number',
         'date_requested',
@@ -43,6 +54,22 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'lat',
         'lng',
         'location',
+        'division_concerned',
+        'date_forwarded',
+        'forwarded_by',
+        'date_received',
+        'received_by',
+        'dispatched_by',
+        'division_received_by',
+        'date_dispatched',
+        'date_accomplished',
+        'actions_taken',
+        'accomplishment_processed_by',
+        'recommendations',
+        'field_findings',
+        'acknowledge_by',
+        'verified_by',
+        'date_verified',
     ];
 
     protected $appends = [

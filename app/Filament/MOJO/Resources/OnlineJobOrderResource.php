@@ -119,7 +119,7 @@ class OnlineJobOrderResource extends Resource
                     }),
                 Forms\Components\Select::make('barangay')
                     ->required(true)
-                    ->options(fn (Get $get): Collection => DB::connection('kitdb')->table('barangays')
+                    ->options(fn (Get $get): Collection => DB::table('barangays')
                     ->where('city_id', $get('town'))
                     ->pluck('name', 'id'))
                     ->searchable(),
