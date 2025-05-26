@@ -97,14 +97,14 @@ class UserResource extends Resource
                 Forms\Components\TextInput::make('avatar')
                     ->maxLength(255)
                     ->default(null),
-                Forms\Components\TextInput::make('locale')
-                    ->maxLength(255)
-                    ->default(null),
+                // Forms\Components\TextInput::make('locale')
+                //     ->maxLength(255)
+                //     ->default(null),
                 Forms\Components\Toggle::make('is_approved'),
-                Forms\Components\DateTimePicker::make('email_verified_at')
-                        ->displayFormat('F d, Y H:i:s')
-                        ->native(false)
-                        ->required(),
+                // Forms\Components\DateTimePicker::make('email_verified_at')
+                //         ->displayFormat('F d, Y H:i:s')
+                //         ->native(false)
+                //         ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->afterStateHydrated(function (Forms\Components\TextInput $component, $state) {
@@ -145,12 +145,12 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('avatar')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('locale')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('locale')
+                //     ->searchable(),
                 ToggleColumn::make('is_approved'),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('email_verified_at')
+                //     ->dateTime()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

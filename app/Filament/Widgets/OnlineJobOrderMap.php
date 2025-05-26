@@ -191,7 +191,7 @@ class OnlineJobOrderMap extends MapTableWidget
                         'url' => url('images/wrench.svg'),
                         'type' => 'svg',
                         'color' => 'red',
-                        'scale' => [35,35],
+                        'scale' => [26,26],
                     ],
                 'label'     => view(
                         'widgets.job-order-label',

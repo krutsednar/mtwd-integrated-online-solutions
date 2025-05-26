@@ -24,9 +24,11 @@ class AccountResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('accmasterlist')
+                    ->label('Account Number')
                     ->required()
                     ->maxLength(191),
                 Forms\Components\TextInput::make('mastername')
+                    ->label('Account Name')
                     ->maxLength(191)
                     ->default(null),
                 Forms\Components\TextInput::make('mobile')
@@ -35,12 +37,12 @@ class AccountResource extends Resource
                 Forms\Components\TextInput::make('meter_number')
                     ->maxLength(255)
                     ->default(null),
-                Forms\Components\TextInput::make('latitude')
-                    ->maxLength(255)
-                    ->default(null),
-                Forms\Components\TextInput::make('longtitude')
-                    ->maxLength(255)
-                    ->default(null),
+                // Forms\Components\TextInput::make('latitude')
+                //     ->maxLength(255)
+                //     ->default(null),
+                // Forms\Components\TextInput::make('longtitude')
+                //     ->maxLength(255)
+                //     ->default(null),
             ]);
     }
 
@@ -49,40 +51,42 @@ class AccountResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('accmasterlist')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Account Number'),
                 Tables\Columns\TextColumn::make('mastername')
-                    ->searchable(),
+                    ->searchable()
+                    ->label('Account Name'),
                 Tables\Columns\TextColumn::make('mobile')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('meter_number')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('deleted_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('latitude')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('longtitude')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('created_at')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('updated_at')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('deleted_at')
+                //     ->dateTime()
+                //     ->sortable()
+                //     ->toggleable(isToggledHiddenByDefault: true),
+                // Tables\Columns\TextColumn::make('latitude')
+                //     ->searchable(),
+                // Tables\Columns\TextColumn::make('longtitude')
+                //     ->searchable(),
             ])
             ->filters([
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                // Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+                // Tables\Actions\BulkActionGroup::make([
+                //     Tables\Actions\DeleteBulkAction::make(),
+                // ]),
             ]);
     }
 
@@ -97,8 +101,8 @@ class AccountResource extends Resource
     {
         return [
             'index' => Pages\ListAccounts::route('/'),
-            'create' => Pages\CreateAccount::route('/create'),
-            'edit' => Pages\EditAccount::route('/{record}/edit'),
+            // 'create' => Pages\CreateAccount::route('/create'),
+            // 'edit' => Pages\EditAccount::route('/{record}/edit'),
         ];
     }
 }

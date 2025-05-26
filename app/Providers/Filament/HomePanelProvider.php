@@ -6,6 +6,8 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
+use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Home\Pages\Auth\Register;
@@ -13,6 +15,7 @@ use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -27,8 +30,11 @@ class HomePanelProvider extends PanelProvider
         return $panel
             ->id('home')
             ->path('home')
-            ->login()
+            ->login(Login::class)
             ->registration(Register::class)
+            ->emailVerification()
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->colors([
                 'primary' => Color::Blue,
             ])

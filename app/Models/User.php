@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Namu\WireChat\Traits\Chatable;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -54,7 +56,7 @@ class User extends Authenticatable implements FilamentUser
         'mobile_number',
         'address',
         'password',
-        'locale',
+        'avatar',
         'is_approved',
     ];
 
@@ -100,5 +102,10 @@ class User extends Authenticatable implements FilamentUser
         static::creating(function (User $user) {
             $user->is_approved = false;
         });
+    }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar ? Storage::url($this->avatar) : null;
     }
 }

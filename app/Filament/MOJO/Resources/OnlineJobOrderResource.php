@@ -5,10 +5,12 @@ namespace App\Filament\MOJO\Resources;
 use DB;
 use Carbon\Carbon;
 use Filament\Forms;
+use App\Models\City;
 use Filament\Tables;
 use GuzzleHttp\Client;
 use App\Models\Account;
 use Filament\Forms\Get;
+use App\Models\Barangay;
 use App\Models\Username;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
@@ -22,6 +24,7 @@ use Filament\Tables\Filters\Filter;
 use Illuminate\Support\Facades\Http;
 use Filament\Tables\Actions\ViewAction;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Forms\Components\DatePicker;
 use Illuminate\Database\Eloquent\Builder;
@@ -91,9 +94,7 @@ class OnlineJobOrderResource extends Resource
                     ->searchable()
                     ->preload()
                     ->reactive(),
-                Forms\Components\TextInput::make('address')
-                    ->label('House No./Blk/Unit/Zone/Purok/Street')
-                    ->required(true),
+
                 Forms\Components\Select::make('town')
                     ->required(true)->options(function () {
                         return DB::connection('kitdb')->table('cities')->whereIn('id', ['21529', '21527', '21520'])->pluck('name', 'id')->toArray();
@@ -122,6 +123,9 @@ class OnlineJobOrderResource extends Resource
                     ->where('city_id', $get('town'))
                     ->pluck('name', 'id'))
                     ->searchable(),
+                Forms\Components\TextInput::make('address')
+                    ->label('House No./Blk/Unit/Zone/Purok/Street')
+                    ->required(true),
                 Forms\Components\TextInput::make('requested_by')
                     ->required(true),
                 Forms\Components\TextInput::make('contact_number')
@@ -171,61 +175,85 @@ class OnlineJobOrderResource extends Resource
             )
             ->columns([
                 Tables\Columns\TextColumn::make('jo_number')
-                ->searchable(),
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('date_requested')
                     ->dateTime('F d, Y'),
-                Tables\Columns\TextColumn::make('account_number')
-                ->searchable(),
                 IconColumn::make('account.latitude')
-                ->label('Map View')
-                ->icon('fas-map-marked-alt')
-                ->color('info')
-                ->size(IconColumn\IconColumnSize::Large)
-                ->url(function ($record) {
-                    if (!$record || !$record->account || !$record->account->latitude || !$record->account->longtitude) {
-                        return null;
-                    }
+                    ->label('Map View')
+                    ->icon('fas-map-marked-alt')
+                    ->color('info')
+                    ->size(IconColumn\IconColumnSize::Large)
+                    ->url(function ($record) {
+                        if (!$record || !$record->account || !$record->account->latitude || !$record->account->longtitude) {
+                            return null;
+                        }
 
-                    return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
-                        $record->account->latitude . ',' . $record->account->longtitude .
-                        '/@' . $record->account->latitude . ',' . $record->account->longtitude . ',20z';
-                }, shouldOpenInNewTab: true)
-                ->tooltip('Go to map view')
-                ->alignCenter(),
-
-                // ViewColumn::make('id')
-                // ->view('filament.tables.columns.map-view')
-                // ,
-
-
-                Tables\Columns\TextColumn::make('registered_name')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('meter_number')
-                ->searchable(),
+                        return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
+                            $record->account->latitude . ',' . $record->account->longtitude .
+                            '/@' . $record->account->latitude . ',' . $record->account->longtitude . ',20z';
+                    }, shouldOpenInNewTab: true)
+                    ->tooltip('Go to map view')
+                    ->alignCenter(),
+                Tables\Columns\TextColumn::make('account_number')
+                    ->description(fn (OnlineJobOrder $record): string => $record->registered_name, position: 'below')
+                    ->searchable()
+                    ->wrap(),
+                // Tables\Columns\TextColumn::make('registered_name')
+                // ->searchable(),
+                // Tables\Columns\TextColumn::make('meter_number')
+                // ->searchable(),
                 Tables\Columns\TextColumn::make('jocode.description')
                 ->label('JO Code')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('address')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('barangay')
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A';
-                })
-                ->searchable(),
-                Tables\Columns\TextColumn::make('town')
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return DB::connection('kitdb')->table('cities')->where('id', $record->town)->value('name') ?? 'N/A';
-                })
                 ->searchable(),
                 Tables\Columns\TextColumn::make('requested_by')
                 ->searchable(),
                 Tables\Columns\TextColumn::make('contact_number')
                 ->searchable(),
-                Tables\Columns\TextColumn::make('email')
-                ->searchable(),
+                Tables\Columns\TextColumn::make('address')
+                ->searchable()
+                ->getStateUsing(function (OnlineJobOrder $record) {
+                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
+                })
+                // ->wrap()
+                ->limit(30)
+                ->tooltip(function (TextColumn $column): ?string {
+                    $state = $column->getState();
+
+                    if (strlen($state) <= $column->getCharacterLimit()) {
+                        return null;
+                    }
+
+                    // Only render the tooltip if the column content exceeds the length limit.
+                    return $state;
+                }),
+                // ->lineClamp(2),
+                // Tables\Columns\TextColumn::make('barangay')
+                // ->getStateUsing(function (OnlineJobOrder $record) {
+                //     return Barangay::where('id', $record->barangay)->value('name') ?? 'N/A';
+                // })
+                // ->searchable(),
+                // Tables\Columns\TextColumn::make('town')
+                // ->getStateUsing(function (OnlineJobOrder $record) {
+                //     return DB::table('cities')->where('id', $record->town)->value('name') ?? 'N/A';
+                // })
+                // ->searchable(),
+
+                // Tables\Columns\TextColumn::make('email')
+                // ->searchable(),
                 Tables\Columns\TextColumn::make('mode_received')
                 ->searchable(),
-                Tables\Columns\TextColumn::make('remarks'),
+                Tables\Columns\TextColumn::make('remarks')
+                ->limit(30)
+                ->tooltip(function (TextColumn $column): ?string {
+                    $state = $column->getState();
+
+                    if (strlen($state) <= $column->getCharacterLimit()) {
+                        return null;
+                    }
+
+                    // Only render the tooltip if the column content exceeds the length limit.
+                    return $state;
+                }),
                 Tables\Columns\TextColumn::make('processed_by')
                 ->getStateUsing(function (OnlineJobOrder $record) {
                     return Username::where('code', $record->processed_by)->value('name') ?? '';

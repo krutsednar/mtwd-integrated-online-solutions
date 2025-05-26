@@ -1,27 +1,42 @@
 <?php
 
-namespace App\Filament\Home\Pages\Auth;
-use Filament\Pages\Page;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
+namespace App\Filament\Pages;
 
+use Filament\Forms;
+use Filament\Forms\Form;
+use Filament\Pages\Auth\EditProfile;
+use Filament\Forms\Components\Select;
+use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
-use Filament\Pages\Auth\Register as BaseRegister;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
-class Register extends BaseRegister
+class Profile extends EditProfile
 {
-    // protected static ?string $navigationIcon = 'heroicon-o-document-text';
-
-    // protected static string $view = 'filament.home.pages.auth.register';
-
-    protected function getForms(): array
+    public function form(Form $form): Form
     {
-        return [
-            'form' => $this->form(
-                $this->makeForm()
+        return $form
+            ->schema([
+                Forms\Components\Section::make()
                     ->schema([
+                        Forms\Components\FileUpload::make('avatar')
+                            ->image()
+                            ->imageEditor()
+                            ->circleCropper()
+                            ->directory('avatars')
+                            ->moveFiles()
+                            ->columnSpanFull()
+                            ->afterStateUpdated(function ($state) {
+                                if (! $state instanceof TemporaryUploadedFile) return;
+
+                                // Delete old avatar if exists
+                                $oldAvatar = auth()->user()->avatar;
+                                if ($oldAvatar && Storage::exists($oldAvatar)) {
+                                    Storage::delete($oldAvatar);
+                                }
+                            }),
+
                         $this->getEmployeeNumberFormComponent(),
                         $this->getFirstNameFormComponent(),
                         $this->getMiddleNameFormComponent(),
@@ -34,12 +49,9 @@ class Register extends BaseRegister
                         $this->getEmailFormComponent(),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
-                        $this->getIsApprovedFormComponent(),
-
                     ])
-                    ->statePath('data'),
-            ),
-        ];
+                    ->columns(1),
+            ]);
     }
 
     protected function getEmployeeNumberFormComponent(): Component
@@ -122,15 +134,4 @@ class Register extends BaseRegister
             ->prefix('+63')
             ->maxLength(10);
     }
-    protected function getIsApprovedFormComponent(): Component
-    {
-        return Toggle::make('is_approved')
-            ->required()
-            ->hidden();
-    }
-    // protected function getEmployeeNumberFormComponent(): Component
-    // {
-    //     return TextInput::make('employee_number')
-    //         ->required();
-    // }
 }
