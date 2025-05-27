@@ -39,12 +39,13 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+
             ->headerActions([
-                ImportAction::make()
-                    ->importer(CategoryImporter::class)
-                    ->color('success')
-                    ->label('Import CSV')
-                    ->icon('heroicon-o-document-arrow-down')
+                // ImportAction::make()
+                //     ->importer(CategoryImporter::class)
+                //     ->color('success')
+                //     ->label('Import CSV')
+                //     ->icon('heroicon-o-document-arrow-down')
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('code'),

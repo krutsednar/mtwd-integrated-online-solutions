@@ -44,10 +44,10 @@ class DivisionResource extends Resource
         return $table
             ->headerActions([
                 ImportAction::make()
-                    ->importer(DivisionImporter::class)
-                    ->color('success')
-                    ->label('Import CSV')
-                    ->icon('heroicon-o-document-arrow-down')
+                    // ->importer(DivisionImporter::class)
+                    // ->color('success')
+                    // ->label('Import CSV')
+                    // ->icon('heroicon-o-document-arrow-down')
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('code'),

@@ -39,10 +39,10 @@ class UsernameResource extends Resource
         return $table
             ->headerActions([
                 ImportAction::make()
-                    ->importer(UsernameImporter::class)
-                    ->color('success')
-                    ->label('Import CSV')
-                    ->icon('heroicon-o-document-arrow-down')
+                    // ->importer(UsernameImporter::class)
+                    // ->color('success')
+                    // ->label('Import CSV')
+                    // ->icon('heroicon-o-document-arrow-down')
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('code'),

@@ -43,10 +43,10 @@ class JobOrderCodeResource extends Resource
         return $table
             ->headerActions([
                 ImportAction::make()
-                    ->importer(JobOrderCodeImporter::class)
-                    ->color('success')
-                    ->label('Import CSV')
-                    ->icon('heroicon-o-document-arrow-down')
+                    // ->importer(JobOrderCodeImporter::class)
+                    // ->color('success')
+                    // ->label('Import CSV')
+                    // ->icon('heroicon-o-document-arrow-down')
             ])
             ->columns([
                 Tables\Columns\TextColumn::make('code'),

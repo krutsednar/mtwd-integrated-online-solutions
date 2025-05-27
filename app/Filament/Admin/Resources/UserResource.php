@@ -100,6 +100,11 @@ class UserResource extends Resource
                 // Forms\Components\TextInput::make('locale')
                 //     ->maxLength(255)
                 //     ->default(null),
+                 Forms\Components\Select::make('roles')
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
                 Forms\Components\Toggle::make('is_approved'),
                 // Forms\Components\DateTimePicker::make('email_verified_at')
                 //         ->displayFormat('F d, Y H:i:s')
@@ -123,6 +128,8 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('employee_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('roles.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('first_name')
                     ->searchable(),
