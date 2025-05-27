@@ -88,6 +88,9 @@ class User extends Authenticatable implements FilamentUser
     {
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
         // return $this->hasVerifiedEmail() && $this->is_approved;
+        if ($panel->getId() === 'executive') {
+            return $this->hasRole('super_admin') && $this->hasVerifiedEmail();
+        }
         return $this->is_approved;
     }
 
@@ -108,4 +111,7 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->avatar ? Storage::url($this->avatar) : null;
     }
+
+
+
 }

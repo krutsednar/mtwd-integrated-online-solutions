@@ -23,9 +23,12 @@ use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Cheesegrits\FilamentGoogleMaps\Tests\Models\Location;
 use Cheesegrits\FilamentGoogleMaps\Widgets\MapTableWidget;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
+use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
 class OnlineJobOrderMap extends MapTableWidget
 {
+    // use HasWidgetShield;
+
 	protected static ?string $heading = 'Online Job Order Map';
 
 	protected static ?int $sort = 999;
@@ -248,4 +251,5 @@ class OnlineJobOrderMap extends MapTableWidget
     {
         return [10000, 25, 50, 100];
     }
+
 }

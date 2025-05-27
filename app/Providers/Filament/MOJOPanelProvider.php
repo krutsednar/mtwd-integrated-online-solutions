@@ -46,11 +46,8 @@ class MOJOPanelProvider extends PanelProvider
             ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverWidgets(in: app_path('Filament/MOJO/Widgets'), for: 'App\\Filament\\MOJO\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
                 JobOrderOverview::class,
-
-                OnlineJobOrderMap::class,
-                // Widgets\FilamentInfoWidget::class,
+                // OnlineJobOrderMap::class
             ])
             ->middleware([
                 EncryptCookies::class,
