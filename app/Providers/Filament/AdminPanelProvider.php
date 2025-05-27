@@ -62,7 +62,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-                ApiServicePlugin::make(),
+                // ApiServicePlugin::make(),
                 ActivitylogPlugin::make()
                 ->navigationGroup('User Management')
                 ->navigationIcon('mdi-shield-account-outline')
@@ -82,8 +82,7 @@ class AdminPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ])
-            ->sidebarCollapsibleOnDesktop();
+                    ]);
 
     }
 }

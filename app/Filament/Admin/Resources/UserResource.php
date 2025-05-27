@@ -52,8 +52,7 @@ class UserResource extends Resource
                     ->label('Username (ex: ICTD-Kurt'),
                 Forms\Components\DatePicker::make('birthday')
                         ->displayFormat('F d, Y')
-                        ->native(false)
-                        ->required(),
+                        ->native(false),
                 Forms\Components\Select::make('division')
                     ->options([
                         'OGM'     => 'Office of the General Manager',
@@ -84,32 +83,23 @@ class UserResource extends Resource
                     ])
                     ->required(),
                 Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required(),
+                    ->email(),
                 Forms\Components\TextInput::make('mobile_number')
-                    ->length(10)
+                    ->maxLength(10)
                     ->numeric()
-                    ->prefix('+63')
-                    ->required(),
+                    ->prefix('+63'),
                 Forms\Components\TextInput::make('address')
                     ->maxLength(255)
                     ->default(null),
                 Forms\Components\TextInput::make('avatar')
                     ->maxLength(255)
                     ->default(null),
-                // Forms\Components\TextInput::make('locale')
-                //     ->maxLength(255)
-                //     ->default(null),
                  Forms\Components\Select::make('roles')
                     ->relationship('roles', 'name')
                     ->multiple()
                     ->preload()
                     ->searchable(),
                 Forms\Components\Toggle::make('is_approved'),
-                // Forms\Components\DateTimePicker::make('email_verified_at')
-                //         ->displayFormat('F d, Y H:i:s')
-                //         ->native(false)
-                //         ->required(),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->afterStateHydrated(function (Forms\Components\TextInput $component, $state) {
