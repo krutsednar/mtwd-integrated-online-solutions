@@ -48,7 +48,9 @@ class OnlineJobOrderResource extends Resource
                     ->required()
                     ->readOnly()
                     ->reactive()
-                    ->placeholder(Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT)),
+                    // ->placeholder(Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT))
+                    ->placeholder(Carbon::now()->format('Ym') . '' . str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT))
+                    ,
                 Forms\Components\DateTimePicker::make('date_requested')
                     ->required(true)
                     ->default(Carbon::now()),
@@ -102,6 +104,34 @@ class OnlineJobOrderResource extends Resource
                     ->searchable()
                     ->reactive()
                     ->live()
+                    // ->afterStateUpdated(function ($state, callable $set) {
+                    //     // Determine prefix based on selected town
+                    //     $prefix = match ($state) {
+                    //         '21527' => 'SO',
+                    //         '21520' => 'PO',
+                    //         '21529' => 'TO',
+                    //         default => 'MOJO',
+                    //     };
+
+                    //     // Get the latest OnlineJobOrder including soft deleted
+                    //     $latestOrder = \App\Models\OnlineJobOrder::withTrashed()
+                    //         ->where('jo_number', 'like', $prefix . Carbon::now()->format('Ym') . '%')
+                    //         ->orderByDesc('id')
+                    //         ->first();
+
+                    //     if ($latestOrder) {
+                    //         // Extract last 7 digits and increment
+                    //         $lastNumber = (int)substr($latestOrder->jo_number, -7);
+                    //         $newNumber = $lastNumber + 1;
+                    //     } else {
+                    //         $newNumber = 1;
+                    //     }
+
+                    //     $suffix = str_pad($newNumber, 7, '0', STR_PAD_LEFT);
+                    //     $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
+
+                    //     $set('jo_number', $joNumber);
+                    // }),
                     ->afterStateUpdated(function ($state, callable $set) {
                         // Determine prefix based on selected town
                         $prefix = match ($state) {
@@ -111,8 +141,8 @@ class OnlineJobOrderResource extends Resource
                             default => 'MOJO',
                         };
 
-                        $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
-                        $suffix = str_pad($count, 7, '0', STR_PAD_LEFT);
+                        // $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
+                        $suffix = str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT);
                         $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
 
                         $set('jo_number', $joNumber);
@@ -204,11 +234,14 @@ class OnlineJobOrderResource extends Resource
                 // ->searchable(),
                 Tables\Columns\TextColumn::make('jocode.description')
                 ->label('JO Code')
-                ->searchable(),
+                ->searchable()
+                ->wrap(),
                 Tables\Columns\TextColumn::make('requested_by')
-                ->searchable(),
+                ->searchable()
+                ->wrap(),
                 Tables\Columns\TextColumn::make('contact_number')
-                ->searchable(),
+                ->searchable()
+                ->wrap(),
                 Tables\Columns\TextColumn::make('address')
                 ->searchable()
                 ->getStateUsing(function (OnlineJobOrder $record) {
@@ -265,10 +298,28 @@ class OnlineJobOrderResource extends Resource
                 ->searchable(),
             ])
             ->filters([
-                Filter::make('created_at')
+                Filter::make('date_requested')
                     ->form([
-                        DatePicker::make('date_requested'),
-                    ]),
+                        DatePicker::make('from')
+                        ->label('Date Requested - Start')
+                        ->displayFormat('F d, Y')
+                        ->native(false),
+                        DatePicker::make('to')
+                        ->label('Date Requested - End')
+                        ->displayFormat('F d, Y')
+                        ->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('date_requested', '>=', $date),
+                            )
+                            ->when(
+                                $data['to'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('date_requested', '<=', $date),
+                            );
+                    }),
                 // Tables\Filters\TrashedFilter::make(),
             ])
             ->actions([
@@ -302,8 +353,8 @@ class OnlineJobOrderResource extends Resource
     {
         return [
             'index' => Pages\ListOnlineJobOrders::route('/'),
-            'create' => Pages\CreateOnlineJobOrder::route('/create'),
-            'edit' => Pages\EditOnlineJobOrder::route('/{record}/edit'),
+            // 'create' => Pages\CreateOnlineJobOrder::route('/create'),
+            // 'edit' => Pages\EditOnlineJobOrder::route('/{record}/edit'),
         ];
     }
 

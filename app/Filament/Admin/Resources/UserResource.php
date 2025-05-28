@@ -64,7 +64,7 @@ class UserResource extends Resource
                         'CPPAD'     => 'Corporate Planning and Public Affairs Division',
                         'ICSD'     => 'Internal Control and System Development Division',
                         'LD'   => 'Legal Division',
-                        'ICTD'    => 'Information and Communication Division',
+                        'ICTD'    => 'Information and Communication Technology Division',
                         'HRD'    => 'Human Resource Department',
                         'GSD'  => 'General Service Division',
                         'PMMD'  => 'Property and Material Management Division',

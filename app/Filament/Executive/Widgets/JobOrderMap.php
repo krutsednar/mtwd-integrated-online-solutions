@@ -1,10 +1,9 @@
 <?php
 
-namespace App\Filament\Widgets;
+namespace App\Filament\Executive\Widgets;
 
 use DB;
 use Filament\Tables;
-// use Geocoder\Location;
 use App\Models\Username;
 use Filament\Actions\Action;
 use App\Models\OnlineJobOrder;
@@ -14,7 +13,6 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
-// use Cheesegrits\FilamentGoogleMaps\Tests\Models\Location;
 use Filament\Infolists\Components\TextEntry;
 use Cheesegrits\FilamentGoogleMaps\Columns\MapColumn;
 use Cheesegrits\FilamentGoogleMaps\Actions\GoToAction;
@@ -23,28 +21,26 @@ use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Cheesegrits\FilamentGoogleMaps\Tests\Models\Location;
 use Cheesegrits\FilamentGoogleMaps\Widgets\MapTableWidget;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
-use BezhanSalleh\FilamentShield\Traits\HasWidgetShield;
 
-class OnlineJobOrderMap extends MapTableWidget
+class JobOrderMap extends MapTableWidget
 {
-    // use HasWidgetShield;
+    protected static ?string $heading = 'Online Job Order Map';
 
-	protected static ?string $heading = 'Online Job Order Map';
+    protected static ?int $sort = 1;
 
-	protected static ?int $sort = 999;
-
-	protected static ?string $pollingInterval = null;
+    protected static ?string $pollingInterval = null;
 
 	protected static ?bool $clustering = true;
 
-	protected static ?string $mapId = 'incidents';
+	protected static ?string $mapId = 'jobOrders';
 
     protected int | string | array $columnSpan = 'full';
 
     protected static ?string $markerAction = 'markerAction';
 
+    protected static ?string $navigationIcon = 'fas-map-marked-alt';
 
-	protected function getTableQuery(): Builder
+    protected function getTableQuery(): Builder
 	{
 		return \App\Models\OnlineJobOrder::whereNotNull('lat')->where('status', '!=', 'Accomplished')->latest();
 	}
@@ -251,5 +247,4 @@ class OnlineJobOrderMap extends MapTableWidget
     {
         return [10000, 25, 50, 100];
     }
-
 }

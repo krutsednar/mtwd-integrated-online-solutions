@@ -41,10 +41,22 @@ class JobOrderPerZoneChart extends ApexChartWidget
             ->orderBy('zone')
             ->pluck('total', 'zone');
 
+        $ongoing =
+        OnlineJobOrder::query()
+            ->whereNotNull('account_number')
+            ->where('status', '!=', 'Accomplished')
+            ->where('account_number', '!=', '00-000000')
+            ->whereNotIn('account_number', ['-', 'N', 'NA'])
+            ->selectRaw('LEFT(account_number, 2) as zone, COUNT(*) as total')
+            ->groupBy('zone')
+            ->orderBy('zone')
+            ->pluck('total', 'zone');
+
         return [
             'chart' => [
-                'type' => 'area',
+                'type' => 'bar',
                 'height' => 400,
+                'stacked' => true,
                 'toolbar' => [
                     'show' => true,
                 ],
@@ -52,12 +64,22 @@ class JobOrderPerZoneChart extends ApexChartWidget
 
             'series' => [
                 [
-                    'name' => 'Job Orders',
+                    'name' => 'Ongoing Job Orders - '.number_format(OnlineJobOrder::whereNotNull('account_number')->where('account_number', '!=', '00-000000')
+                    ->whereNotIn('account_number', ['-', 'N', 'NA'])->where('status', '!=', 'Accomplished')->count()),
+                    'data' => $ongoing->values(),
+                     'type' => 'bar',
+                    // 'backgroundColor' => '#10D0E7',
+                    // 'borderColor' => '#1061E7',
+                ],
+                [
+                    'name' => 'Total Job Orders - '.number_format(OnlineJobOrder::whereNotNull('account_number')->where('account_number', '!=', '00-000000')
+                    ->whereNotIn('account_number', ['-', 'N', 'NA'])->count()),
                     'data' => $data->values(),
                      'type' => 'bar',
                     // 'backgroundColor' => '#10D0E7',
                     // 'borderColor' => '#1061E7',
                 ],
+
             ],
             'xaxis' => [
                 'categories' => $data->keys(),
@@ -71,11 +93,12 @@ class JobOrderPerZoneChart extends ApexChartWidget
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
+
                     ],
                 ],
             ],
             // 'colors' => ['#0E1CF4','#04326C'],
-            'colors' => ['#04326C', '#0E1CF4',],
+            'colors' => ['#066e27', '#0E1CF4',],
             'stroke' => [
                 'curve' => 'smooth',
             ],
@@ -94,11 +117,82 @@ class JobOrderPerZoneChart extends ApexChartWidget
             'plotOptions' => [
                 'bar' => [
                     'dataLabels' => [
-                        'position' => 'middle',
+                        'position' => 'top',
+                        // 'font' => 'black',
+
                         // 'offsetX' => ,
                     ],
                 ],
             ],
         ];
+
+    //     return [
+    //         'chart' => [
+    //             'type' => 'bar',
+    //             'height' => 400,
+    //             'stacked' => true, // ✅ This enables overlapping bars
+    //             'toolbar' => [
+    //                 'show' => true,
+    //             ],
+    //         ],
+    //         'series' => [
+    //             [
+    //                 'name' => 'Total Job Orders - ' . number_format(
+    //                     OnlineJobOrder::whereNotNull('account_number')
+    //                         ->where('account_number', '!=', '00-000000')
+    //                         ->whereNotIn('account_number', ['-', 'N', 'NA'])
+    //                         ->count()
+    //                 ),
+    //                 'data' => $data->values(),
+    //             ],
+    //             [
+    //                 'name' => 'Ongoing Job Orders - ' . number_format(
+    //                     OnlineJobOrder::whereNotNull('account_number')
+    //                         ->where('account_number', '!=', '00-000000')
+    //                         ->whereNotIn('account_number', ['-', 'N', 'NA'])
+    //                         ->where('status', '!=', 'Accomplished')
+    //                         ->count()
+    //                 ),
+    //                 'data' => $ongoing->values(),
+    //             ],
+    //         ],
+    //         'xaxis' => [
+    //             'categories' => $data->keys(),
+    //             'labels' => [
+    //                 'style' => [
+    //                     'fontFamily' => 'inherit',
+    //                 ],
+    //             ],
+    //         ],
+    //         'yaxis' => [
+    //             'labels' => [
+    //                 'style' => [
+    //                     'fontFamily' => 'inherit',
+    //                 ],
+    //             ],
+    //         ],
+    //         'colors' => ['#0E1CF4', '#04326C'],
+    //         'stroke' => [
+    //             'curve' => 'smooth',
+    //         ],
+    //         'legend' => [
+    //             'labels' => [
+    //                 'colors' => '#9ca3af',
+    //                 'fontWeight' => 600,
+    //             ],
+    //         ],
+    //         'dataLabels' => [
+    //             'enabled' => true,
+
+    //         ],
+    //         'plotOptions' => [
+    //             'bar' => [
+    //                 'dataLabels' => [
+    //                     'position' => 'middle',
+    //                     'colors' => '#000000',
+    //                 ],
+    //             ],
+    //         ],
+    //     ];
     }
 }
