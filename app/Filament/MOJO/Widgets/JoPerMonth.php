@@ -2,8 +2,9 @@
 
 namespace App\Filament\MOJO\Widgets;
 
-use App\Models\OnlineJobOrder;
+use Carbon\Carbon;
 use Flowframe\Trend\Trend;
+use App\Models\OnlineJobOrder;
 use Flowframe\Trend\TrendValue;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
@@ -44,7 +45,7 @@ class JoPerMonth extends ApexChartWidget
 
         return [
             'chart' => [
-                'type' => 'area',
+                'type' => 'bar',
                 'height' => 400,
                 'toolbar' => [
                     'show' => true,
@@ -54,13 +55,13 @@ class JoPerMonth extends ApexChartWidget
                 [
                     'name' => 'Job Orders',
                     'data' => $trend->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
-                    'type' => 'area',
+                    'type' => 'bar',
                     'backgroundColor' => '#deb750',
                     'borderColor' => '#1061E7',
                 ],
             ],
             'xaxis' => [
-                'categories' => $trend->map(fn (TrendValue $value) => $value->date)->toArray(),
+                'categories' => $trend->map(fn (TrendValue $value) => Carbon::parse($value->date)->format('M-Y'))->toArray(),
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
@@ -86,7 +87,7 @@ class JoPerMonth extends ApexChartWidget
             'plotOptions' => [
                 'bar' => [
                     'dataLabels' => [
-                        'position' => 'middle',
+                        'position' => 'top',
                         // 'offsetX' => ,
                     ],
                 ],
