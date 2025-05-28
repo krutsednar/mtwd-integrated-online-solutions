@@ -9,8 +9,8 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class JoPerMonth extends ApexChartWidget
 {
-    protected static ?int $sort = 3;
-    protected int | string | array $columnSpan = 'full';
+    protected static ?int $sort = 4;
+    // protected int | string | array $columnSpan = 'full';
     /**
      * Chart Id
      *
@@ -34,6 +34,7 @@ class JoPerMonth extends ApexChartWidget
     protected function getOptions(): array
     {
         $trend = Trend::model(OnlineJobOrder::class)
+            ->dateColumn('date_requested')
             ->between(
                 start: now()->startOfYear(),
                 end: now()->endOfYear(),
