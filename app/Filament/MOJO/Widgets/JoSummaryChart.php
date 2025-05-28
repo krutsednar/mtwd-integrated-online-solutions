@@ -20,7 +20,7 @@ class JoSummaryChart extends ApexChartWidget
      *
      * @var string|null
      */
-    protected static ?string $heading = 'Job Order Summary as of January 2025';
+    protected static ?string $heading = 'Job Order Summary';
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -33,15 +33,15 @@ class JoSummaryChart extends ApexChartWidget
         $accomplished = OnlineJobOrder::query()
             ->whereNotNull('account_number')
             ->where('status', 'Accomplished')
-            ->where('account_number', '!=', '00-000000')
-            ->whereNotIn('account_number', ['-', 'N', 'NA'])
+            // ->where('account_number', '!=', '00-000000')
+            // ->whereNotIn('account_number', ['-', 'N', 'NA'])
             ->count();
 
         $ongoing = OnlineJobOrder::query()
             ->whereNotNull('account_number')
             ->where('status', '!=', 'Accomplished')
-            ->where('account_number', '!=', '00-000000')
-            ->whereNotIn('account_number', ['-', 'N', 'NA'])
+            // ->where('account_number', '!=', '00-000000')
+            // ->whereNotIn('account_number', ['-', 'N', 'NA'])
             ->count();
 
         return [
@@ -50,10 +50,11 @@ class JoSummaryChart extends ApexChartWidget
                 'height' => 400,
             ],
             'series' => [$accomplished, $ongoing],
-            'labels' => ['Accomplished', 'Ongoing'],
+            'labels' => ['Accomplished: '.$accomplished, 'Ongoing: '.$ongoing],
             'legend' => [
                 'labels' => [
                     'fontFamily' => 'inherit',
+                    'fontWeight' => 'inherit',
                 ],
             ],
         ];
