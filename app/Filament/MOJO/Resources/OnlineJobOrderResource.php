@@ -27,6 +27,7 @@ use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Forms\Components\DatePicker;
+use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
@@ -303,11 +304,11 @@ class OnlineJobOrderResource extends Resource
                 Filter::make('date_requested')
                     ->form([
                         DatePicker::make('from')
-                        ->label('Date Requested - Start')
+                        ->label('Date Requested - From')
                         ->displayFormat('F d, Y')
                         ->native(false),
                         DatePicker::make('to')
-                        ->label('Date Requested - End')
+                        ->label('Date Requested - To')
                         ->displayFormat('F d, Y')
                         ->native(false),
                     ])
@@ -320,6 +321,38 @@ class OnlineJobOrderResource extends Resource
                             ->when(
                                 $data['to'],
                                 fn (Builder $query, $date): Builder => $query->whereDate('date_requested', '<=', $date),
+                            );
+                    }),
+                SelectFilter::make('status')
+                    ->label('Status')
+                    ->options(function () {
+                        return OnlineJobOrder::query()
+                            ->distinct()
+                            ->pluck('status', 'status')
+                            ->toArray();
+                    })
+                    ->placeholder('All Statuses'),
+                Filter::make('date_accomplished')
+                ->label('test')
+                    ->form([
+                        DatePicker::make('from')
+                        ->label('Date Accomplished - From')
+                        ->displayFormat('F d, Y')
+                        ->native(false),
+                        DatePicker::make('to')
+                        ->label('Date Accomplished - To')
+                        ->displayFormat('F d, Y')
+                        ->native(false),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['from'],
+                                fn (Builder $query, $date): Builder => $query->where('status', 'Accomplished')->whereDate('date_accomplished', '>=', $date),
+                            )
+                            ->when(
+                                $data['to'],
+                                fn (Builder $query, $date): Builder => $query->where('status', 'Accomplished')->whereDate('date_accomplished', '<=', $date),
                             );
                     }),
                 // Tables\Filters\TrashedFilter::make(),
