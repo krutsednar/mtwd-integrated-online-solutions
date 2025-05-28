@@ -296,6 +296,8 @@ class OnlineJobOrderResource extends Resource
                 ->searchable(),
                 Tables\Columns\TextColumn::make('status')
                 ->searchable(),
+                Tables\Columns\TextColumn::make('date_accomplished')
+                    ->dateTime('F d, Y'),
             ])
             ->filters([
                 Filter::make('date_requested')
