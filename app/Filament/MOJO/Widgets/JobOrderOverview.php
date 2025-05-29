@@ -36,7 +36,7 @@ class JobOrderOverview extends BaseWidget
         ->value('avg_per_month');
 
         return [
-            Stat::make('Total Accomplished Job Orders', number_format($totalAccomplished).' ('.round($totalAccomplished/$jo->count()*100).'%)')
+            Stat::make('Total Accomplished Job Orders', number_format($totalAccomplished).' ('.ceil($totalAccomplished/$jo->count()*100).'%)')
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('success'),
             Stat::make('Total Ongoing Job Orders', number_format($totalOngoing).' ('.floor($totalOngoing/$jo->count()*100).'%)')
