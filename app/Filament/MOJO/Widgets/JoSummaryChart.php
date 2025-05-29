@@ -7,7 +7,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class JoSummaryChart extends ApexChartWidget
 {
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 2;
     /**
      * Chart Id
      *
