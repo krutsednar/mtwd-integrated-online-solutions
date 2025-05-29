@@ -27,7 +27,7 @@ class JobOrderPerZoneChart extends ApexChartWidget
 
     protected static ?string $pollingInterval = '10s';
 
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 4;
 
     protected function getOptions(): array
     {

@@ -13,6 +13,8 @@ class JobOrderOverview extends BaseWidget
 
     protected static ?int $sort = 1;
 
+    // protected static bool $isDiscovered = false;
+
     protected function getStats(): array
     {
         $jo = OnlineJobOrder::get();
