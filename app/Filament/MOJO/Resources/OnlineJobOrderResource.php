@@ -50,7 +50,18 @@ class OnlineJobOrderResource extends Resource
                     ->readOnly()
                     ->reactive()
                     // ->placeholder(Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT))
-                    ->placeholder(Carbon::now()->format('Ym') . '' . str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT))
+                    // ->placeholder(Carbon::now()->format('Ym') . '' . str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT))
+                    ->placeholder(
+                        fn () => Carbon::now()->format('Ym') .
+                            str_pad(
+                                (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                                    ->value('number') ?? 0) + 1,
+                                7,
+                                '0',
+                                STR_PAD_LEFT
+                            )
+                    )
                     ,
                 Forms\Components\DateTimePicker::make('date_requested')
                     ->required(true)
@@ -105,34 +116,6 @@ class OnlineJobOrderResource extends Resource
                     ->searchable()
                     ->reactive()
                     ->live()
-                    // ->afterStateUpdated(function ($state, callable $set) {
-                    //     // Determine prefix based on selected town
-                    //     $prefix = match ($state) {
-                    //         '21527' => 'SO',
-                    //         '21520' => 'PO',
-                    //         '21529' => 'TO',
-                    //         default => 'MOJO',
-                    //     };
-
-                    //     // Get the latest OnlineJobOrder including soft deleted
-                    //     $latestOrder = \App\Models\OnlineJobOrder::withTrashed()
-                    //         ->where('jo_number', 'like', $prefix . Carbon::now()->format('Ym') . '%')
-                    //         ->orderByDesc('id')
-                    //         ->first();
-
-                    //     if ($latestOrder) {
-                    //         // Extract last 7 digits and increment
-                    //         $lastNumber = (int)substr($latestOrder->jo_number, -7);
-                    //         $newNumber = $lastNumber + 1;
-                    //     } else {
-                    //         $newNumber = 1;
-                    //     }
-
-                    //     $suffix = str_pad($newNumber, 7, '0', STR_PAD_LEFT);
-                    //     $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
-
-                    //     $set('jo_number', $joNumber);
-                    // }),
                     ->afterStateUpdated(function ($state, callable $set) {
                         // Determine prefix based on selected town
                         $prefix = match ($state) {
@@ -143,7 +126,14 @@ class OnlineJobOrderResource extends Resource
                         };
 
                         // $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
-                        $suffix = str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT);
+                        $suffix = str_pad(
+                                (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                                    ->value('number') ?? 0) + 1,
+                                7,
+                                '0',
+                                STR_PAD_LEFT
+                            );
                         $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
 
                         $set('jo_number', $joNumber);
@@ -202,7 +192,7 @@ class OnlineJobOrderResource extends Resource
     {
         return $table
             ->query(
-                OnlineJobOrder::query()->with('account')->orderBy('date_requested', 'desc')
+                OnlineJobOrder::query()->with('account')->orderBy('id', 'desc')
             )
             ->columns([
                 Tables\Columns\TextColumn::make('jo_number')
@@ -235,6 +225,10 @@ class OnlineJobOrderResource extends Resource
                 // ->searchable(),
                 Tables\Columns\TextColumn::make('jocode.description')
                 ->label('JO Code')
+                ->searchable()
+                ->wrap(),
+                Tables\Columns\TextColumn::make('jocode.division.name')
+                ->label('Division')
                 ->searchable()
                 ->wrap(),
                 Tables\Columns\TextColumn::make('requested_by')
@@ -400,4 +394,33 @@ class OnlineJobOrderResource extends Resource
                 SoftDeletingScope::class,
             ]);
     }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 1;
+    }
+
+    // protected function mutateFormDataBeforeCreate(array $data): array
+    // {
+
+    //     $prefix = match ($data['town']) {
+    //         '21527' => 'SO',
+    //         '21520' => 'PO',
+    //         '21529' => 'TO',
+    //         default => 'MOJO',
+    //     };
+
+    //     $suffix = str_pad(
+    //         (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+    //             ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+    //             ->value('number') ?? 0) + 1,
+    //         7,
+    //         '0',
+    //         STR_PAD_LEFT
+    //     );
+
+    //     $data['jo_number'] = 'test'.$prefix . Carbon::now()->format('Ym') . $suffix;
+
+    //     return $data;
+    // }
 }

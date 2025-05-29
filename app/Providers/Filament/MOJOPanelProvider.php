@@ -10,7 +10,6 @@ use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
-use App\Filament\Widgets\OnlineJobOrderMap;
 use App\Filament\MOJO\Widgets\JobOrdersChart;
 use App\Filament\MOJO\Widgets\JobOrderOverview;
 use Illuminate\Session\Middleware\StartSession;
@@ -47,7 +46,6 @@ class MOJOPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/MOJO/Widgets'), for: 'App\\Filament\\MOJO\\Widgets')
             ->widgets([
                 JobOrderOverview::class,
-                // OnlineJobOrderMap::class
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -70,7 +68,7 @@ class MOJOPanelProvider extends PanelProvider
                     ->badge(
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
-                    ->sort(1),
+                    ->sort(999),
 
             ])
             ->plugins([

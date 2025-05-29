@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use Auth;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
@@ -10,7 +11,6 @@ use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
-use App\Filament\Widgets\OnlineJobOrderMap;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -20,6 +20,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class ExecutivePanelProvider extends PanelProvider
@@ -42,9 +43,7 @@ class ExecutivePanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Executive/Widgets'), for: 'App\\Filament\\Executive\\Widgets')
             ->widgets([
-                // Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
-                // OnlineJobOrderMap::class,
+                Widgets\AccountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -68,6 +67,9 @@ class ExecutivePanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
+            ])
+            ->plugins([
+            FilamentApexChartsPlugin::make()
             ])
             ->sidebarCollapsibleOnDesktop();
     }

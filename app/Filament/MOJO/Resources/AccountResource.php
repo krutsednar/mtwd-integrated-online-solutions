@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class AccountResource extends Resource
 {
+
     protected static ?string $model = Account::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
@@ -104,5 +105,10 @@ class AccountResource extends Resource
             // 'create' => Pages\CreateAccount::route('/create'),
             // 'edit' => Pages\EditAccount::route('/{record}/edit'),
         ];
+    }
+
+    public static function getNavigationSort(): ?int
+    {
+        return 2;
     }
 }

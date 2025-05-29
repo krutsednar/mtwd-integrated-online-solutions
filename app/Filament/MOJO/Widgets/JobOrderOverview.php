@@ -16,33 +16,45 @@ class JobOrderOverview extends BaseWidget
     protected function getStats(): array
     {
         $jo = OnlineJobOrder::get();
-        $totalAccomplished = $jo->where('status', 'Accomplished')->count();
-        $totalOngoing = $jo->where('status', '!=', 'Accomplished')->count();
+        $totalAccomplished = $jo->whereNotNull('date_accomplished')->count();
+        $totalOngoing = $jo->where('date_accomplished', NULL)->count();
         $averagePerMonth = OnlineJobOrder::selectRaw('COUNT(*) / COUNT(DISTINCT DATE_FORMAT(date_requested, "%Y-%m")) as avg_per_month')
             ->value('avg_per_month');
         $averageTatInSeconds = OnlineJobOrder::whereNotNull('date_requested')
-    ->whereNotNull('date_accomplished')
-    ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, date_requested, date_accomplished)) as avg_tat')
-    ->value('avg_tat');
+        ->whereNotNull('date_accomplished')
+        ->selectRaw('AVG(TIMESTAMPDIFF(SECOND, date_requested, date_accomplished)) as avg_tat')
+        ->value('avg_tat');
 
-    // Convert to CarbonInterval and format
-    $averageTatFormatted = CarbonInterval::seconds($averageTatInSeconds)->cascade()->forHumans([
-        'join' => true,
-        'parts' => 2,
-    ]);
+        // Convert to CarbonInterval and format
+        $averageTatFormatted = CarbonInterval::seconds($averageTatInSeconds)->cascade()->forHumans([
+            'join' => true,
+            'parts' => 2,
+        ]);
+
+        $averageAccomplishedPerMonth = OnlineJobOrder::whereNotNull('date_accomplished')
+        ->selectRaw('COUNT(*) / COUNT(DISTINCT DATE_FORMAT(date_accomplished, "%Y-%m")) as avg_per_month')
+        ->value('avg_per_month');
+
         return [
-            Stat::make('Total Accomplished Job Orders', number_format($totalAccomplished))
+            Stat::make('Total Accomplished Job Orders', number_format($totalAccomplished).' ('.round($totalAccomplished/$jo->count()*100).'%)')
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('success'),
-            Stat::make('Total Ongoing Job Orders', number_format($totalOngoing))
+            Stat::make('Total Ongoing Job Orders', number_format($totalOngoing).' ('.floor($totalOngoing/$jo->count()*100).'%)')
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('warning'),
-            Stat::make('Average Monthly Job Orders', number_format(floor($averagePerMonth)))
+            Stat::make('Total Received Job Orders ', number_format($jo->count()))
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('info'),
-            Stat::make('Average Turn Around Time', $averageTatFormatted)
+            Stat::make('Monthly Accomplished Job Orders', number_format($averageAccomplishedPerMonth))
             ->chart([7, 2, 10, 3, 15, 4, 17])
-            ->color('danger'),
+            ->color('success'),
+            Stat::make('Monthly Received Job Orders', number_format(floor($averagePerMonth)))
+            ->chart([7, 2, 10, 3, 15, 4, 17])
+            ->color('warning'),
+             Stat::make('Turn Around Time', $averageTatFormatted)
+            ->chart([7, 2, 10, 3, 15, 4, 17])
+            ->color('info'),
+
         ];
     }
 }

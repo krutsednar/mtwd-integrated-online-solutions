@@ -7,7 +7,7 @@ use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class JoSummaryChart extends ApexChartWidget
 {
-    protected static ?int $sort = 3;
+    protected static ?int $sort = 1;
     /**
      * Chart Id
      *
@@ -32,14 +32,14 @@ class JoSummaryChart extends ApexChartWidget
     {
         $accomplished = OnlineJobOrder::query()
             ->whereNotNull('account_number')
-            ->where('status', 'Accomplished')
+            ->whereNotNull('date_accomplished')
             // ->where('account_number', '!=', '00-000000')
             // ->whereNotIn('account_number', ['-', 'N', 'NA'])
             ->count();
 
         $ongoing = OnlineJobOrder::query()
             ->whereNotNull('account_number')
-            ->where('status', '!=', 'Accomplished')
+            ->whereNull('date_accomplished')
             // ->where('account_number', '!=', '00-000000')
             // ->whereNotIn('account_number', ['-', 'N', 'NA'])
             ->count();
