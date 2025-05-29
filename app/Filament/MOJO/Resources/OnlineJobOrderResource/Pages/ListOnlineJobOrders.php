@@ -2,6 +2,7 @@
 
 namespace App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
 
+use Carbon\Carbon;
 use Filament\Actions;
 use GuzzleHttp\Client;
 use App\Models\Account;
@@ -22,41 +23,28 @@ class ListOnlineJobOrders extends ListRecords
             Actions\CreateAction::make()
             ->label('Create Job Order')
             ->color('info')
-            // ->after(function (OnlineJobOrder $record) {
-            //     $account = Account::where('accmasterlist', $record->account_number)
-            //         ->whereNotNull('latitude')
-            //         ->first();
+            ->mutateFormDataUsing(function (array $data): array {
+                $prefix = match ($data['town']) {
+            '21527' => 'SO',
+            '21520' => 'PO',
+            '21529' => 'TO',
+            default => 'MOJO',
+        };
 
-            //     if ($account) {
-            //         $record->lat = $account->latitude;
-            //         $record->lng = $account->longtitude;
-            //         $record->save();
-            //     }
-            // })
+        $suffix = str_pad(
+            (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                ->value('number') ?? 0) + 1,
+            7,
+            '0',
+            STR_PAD_LEFT
+        );
+
+        $data['jo_number'] = $prefix . Carbon::now()->format('Ym') . $suffix;
+
+        return $data;
+            })
             ,
-            // ->after(function (OnlineJobOrder $record) {
-            //     $jocode  = JobOrderCode::where('code', $record->job_order_code)->get();
-            //     $divcode = Division::where('code', $jocode->value('division_code'));
-            //     $contact = $divcode->value('contact_number');
-            //     $post = new Client();
-            //         $response = $post->request('POST', 'https://messagingsuite.smart.com.ph/cgphttp/servlet/sendmsg', [
-            //         'headers' =>[
-            //             'Authorization' => ['Basic '.base64_encode('ict@mtwd.gov.ph:M!ST2o24')],
-            //             'Content-Type' => 'application/x-www-form-urlencoded'
-            //         ],
-            //         'form_params' => [
-            //             'destination' => $contact,9178743635,
-            //         'text' => 'MOJO Request
-            //         '.$record->account_number.'
-            //         '.$record->registered_name.'
-            //         '.$record->meter_number.'
-            //         '.JobOrderCode::where('code', $record->job_order_code)->value('description').'
-            //         '.$record->address.', '.DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name').'
-            //         '.$record->contact_number
-
-            //         ],
-            //     ]);
-            // }),
         ];
     }
 }

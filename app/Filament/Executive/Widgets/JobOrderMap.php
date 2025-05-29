@@ -26,7 +26,7 @@ class JobOrderMap extends MapTableWidget
 {
     protected static ?string $heading = 'Online Job Order Map';
 
-    protected static ?int $sort = 1;
+    protected static ?int $sort = 3;
 
     protected static ?string $pollingInterval = null;
 
@@ -38,7 +38,7 @@ class JobOrderMap extends MapTableWidget
 
     protected static ?string $markerAction = 'markerAction';
 
-    protected static ?string $navigationIcon = 'fas-map-marked-alt';
+    protected static bool $isDiscovered = false;
 
     protected function getTableQuery(): Builder
 	{
