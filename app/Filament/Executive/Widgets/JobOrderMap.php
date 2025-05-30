@@ -17,6 +17,7 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Cheesegrits\FilamentGoogleMaps\Columns\MapColumn;
 use Cheesegrits\FilamentGoogleMaps\Actions\GoToAction;
@@ -26,6 +27,7 @@ use Cheesegrits\FilamentGoogleMaps\Tests\Models\Location;
 use Cheesegrits\FilamentGoogleMaps\Widgets\MapTableWidget;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
+
 
 class JobOrderMap extends MapTableWidget
 {
@@ -181,20 +183,6 @@ class JobOrderMap extends MapTableWidget
                     });
                 }
             }),
-            // SelectFilter::make('jocode')
-            // ->label('JO Description')
-            // ->options(function () {
-            //     return \App\Models\JobOrderCode::pluck('description', 'id')->toArray();
-            // })
-            // ->searchable()
-            // ->placeholder('All Descriptions')
-            // ->query(function ($query, array $data) {
-            //     if (filled($data['value'])) {
-            //         $query->where('jocode_id', $data['value']);
-            //     }
-            // }),
-
-
 		];
 	}
 
@@ -204,20 +192,42 @@ class JobOrderMap extends MapTableWidget
 			Tables\Actions\ViewAction::make()
             ->slideOver()
             ->infolist([
-                TextEntry::make('jo_number')->label('JO Number'),
-                TextEntry::make('jocode.description')->label('Description'),
-                TextEntry::make('date_requested'),
-                TextEntry::make('account_number'),
-                TextEntry::make('address'),
-                TextEntry::make('barangay')
-                    ->getStateUsing(fn (OnlineJobOrder $record) =>
-                        DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A'),
+                Section::make()
+    ->columns([
+        'sm' => 2,
+        // 'xl' => 6,
+        // '2xl' => 8,
+    ])
+    ->schema([
+            TextEntry::make('jo_number')->label('JO Number'),
+                // TextEntry::make('jocode.description')->label('Ty[e'),
+                TextEntry::make('date_requested')
+                ->dateTime(),
+                TextEntry::make('jocode.description')->label('JO Type'),
+                TextEntry::make('jocode.category.name')->label('Category'),
+                TextEntry::make('jocode.division.name')->label('Division'),
                 TextEntry::make('requested_by'),
                 TextEntry::make('contact_number'),
+                TextEntry::make('account_number'),
+                TextEntry::make('registered_name'),
+                TextEntry::make('meter_number'),
+                TextEntry::make('address')
+                ->getStateUsing(function (OnlineJobOrder $record) {
+                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
+                }),
+                // TextEntry::make('barangay')
+                //     ->getStateUsing(fn (OnlineJobOrder $record) =>
+                //         DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A'),
+
+                // TextEntry::make('contact_number'),
                 TextEntry::make('processed_by')
                     ->getStateUsing(fn (OnlineJobOrder $record) =>
                         Username::where('code', $record->processed_by)->value('name') ?? ''),
                 TextEntry::make('status'),
+        // ...
+    ])
+
+
             ])
             ->recordTitle(fn (OnlineJobOrder $record) => 'JO #' . $record->jo_number),
 			// Tables\Actions\EditAction::make(),
