@@ -224,7 +224,11 @@ class OnlineJobOrderResource extends Resource
                 // Tables\Columns\TextColumn::make('meter_number')
                 // ->searchable(),
                 Tables\Columns\TextColumn::make('jocode.description')
-                ->label('JO Code')
+                ->label('Type')
+                ->searchable()
+                ->wrap(),
+                Tables\Columns\TextColumn::make('jocode.category.name')
+                ->label('Category')
                 ->searchable()
                 ->wrap(),
                 Tables\Columns\TextColumn::make('jocode.division.name')

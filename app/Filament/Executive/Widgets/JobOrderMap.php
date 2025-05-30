@@ -3,13 +3,17 @@
 namespace App\Filament\Executive\Widgets;
 
 use DB;
+use App\Models\City;
 use Filament\Tables;
+use App\Models\Barangay;
+use App\Models\Category;
 use App\Models\Username;
 use Filament\Actions\Action;
 use App\Models\OnlineJobOrder;
 use Filament\Tables\Filters\Filter;
 use Filament\Infolists\Components\Card;
 use Filament\Tables\Columns\IconColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
@@ -21,6 +25,7 @@ use Cheesegrits\FilamentGoogleMaps\Filters\RadiusFilter;
 use Cheesegrits\FilamentGoogleMaps\Tests\Models\Location;
 use Cheesegrits\FilamentGoogleMaps\Widgets\MapTableWidget;
 use Filament\Tables\Filters\QueryBuilder\Constraints\DateConstraint;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 
 class JobOrderMap extends MapTableWidget
 {
@@ -42,7 +47,7 @@ class JobOrderMap extends MapTableWidget
 
     protected function getTableQuery(): Builder
 	{
-		return \App\Models\OnlineJobOrder::whereNotNull('lat')->where('status', '!=', 'Accomplished')->latest();
+		return \App\Models\OnlineJobOrder::with('jocode')->whereNotNull('lat')->whereNull('date_accomplished')->latest();
 	}
 
 	protected function getTableColumns(): array
@@ -58,22 +63,22 @@ class JobOrderMap extends MapTableWidget
                     ->dateTime('F d, Y'),
                 Tables\Columns\TextColumn::make('account_number')
                 ->searchable(),
-                IconColumn::make('account.latitude')
-                ->label('Map View')
-                ->icon('fas-map-marked-alt')
-                ->color('info')
-                ->size(IconColumn\IconColumnSize::Large)
-                ->url(function ($record) {
-                    if (!$record || !$record->account || !$record->account->latitude || !$record->account->longtitude) {
-                        return null;
-                    }
+                // IconColumn::make('account.latitude')
+                // ->label('Map View')
+                // ->icon('fas-map-marked-alt')
+                // ->color('info')
+                // ->size(IconColumn\IconColumnSize::Large)
+                // ->url(function ($record) {
+                //     if (!$record || !$record->account || !$record->account->latitude || !$record->account->longtitude) {
+                //         return null;
+                //     }
 
-                    return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
-                        $record->account->latitude . ',' . $record->account->longtitude .
-                        '/@' . $record->account->latitude . ',' . $record->account->longtitude . ',20z';
-                }, shouldOpenInNewTab: true)
-                ->tooltip('Go to map view')
-                ->alignCenter(),
+                //     return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
+                //         $record->account->latitude . ',' . $record->account->longtitude .
+                //         '/@' . $record->account->latitude . ',' . $record->account->longtitude . ',20z';
+                // }, shouldOpenInNewTab: true)
+                // ->tooltip('Go to map view')
+                // ->alignCenter(),
 
                 // ViewColumn::make('id')
                 // ->view('filament.tables.columns.map-view')
@@ -84,37 +89,48 @@ class JobOrderMap extends MapTableWidget
                 // ->searchable(),
                 // Tables\Columns\TextColumn::make('meter_number')
                 // ->searchable(),
-                Tables\Columns\TextColumn::make('jocode.description')
-                ->label('Description')
-                ->searchable(),
+                // Tables\Columns\TextColumn::make('jocode.description')
+                // ->label('JO Type')
+                // ->searchable(),
+                Tables\Columns\TextColumn::make('jocode.category.name')
+                ->label('Category')
+                ->description(function (OnlineJobOrder $record) {
+                    return $record->jocode->description;
+                })
+                ->wrap()
+                 ->searchable(query: function ($query, $search) {
+                    $query->orWhereHas('jocode', function ($subQuery) use ($search) {
+                        $subQuery->where('description', 'like', "%{$search}%");
+                    });
+                }),
+                // Tables\Columns\TextColumn::make('jocode.description')
+                // ->label('Type')
+                // ->hidden()
+                // ->searchable(),
+                 Tables\Columns\TextColumn::make('jocode.division.name')
+                ->label('Division')
+                ->searchable()
+                ->wrap(),
                 Tables\Columns\TextColumn::make('address')
-                ->searchable(),
-                // Tables\Columns\TextColumn::make('barangay')
-                // ->getStateUsing(function (OnlineJobOrder $record) {
-                //     return DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A';
-                // })
-                // ->searchable(),
-                // Tables\Columns\TextColumn::make('town')
-                // ->getStateUsing(function (OnlineJobOrder $record) {
-                //     return DB::connection('kitdb')->table('cities')->where('id', $record->town)->value('name') ?? 'N/A';
-                // })
-                // ->searchable(),
+                ->searchable()
+                ->getStateUsing(function (OnlineJobOrder $record) {
+                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
+                })
+                // ->wrap()
+                ->limit(20)
+                ->tooltip(function (TextColumn $column): ?string {
+                    $state = $column->getState();
+
+                    if (strlen($state) <= $column->getCharacterLimit()) {
+                        return null;
+                    }
+
+                    // Only render the tooltip if the column content exceeds the length limit.
+                    return $state;
+                }),
                 Tables\Columns\TextColumn::make('requested_by')
-                ->searchable(),
-                Tables\Columns\TextColumn::make('contact_number')
-                ->searchable(),
-                // Tables\Columns\TextColumn::make('email')
-                // ->searchable(),
-                // Tables\Columns\TextColumn::make('mode_received')
-                // ->searchable(),
-                // Tables\Columns\TextColumn::make('remarks'),
-                // Tables\Columns\TextColumn::make('processed_by')
-                // ->getStateUsing(function (OnlineJobOrder $record) {
-                //     return Username::where('code', $record->processed_by)->value('name') ?? '';
-                // })
-                // ->badge()
-                // ->color('success')
-                // ->searchable(),
+                ->searchable()
+                ->wrap(),
                 Tables\Columns\TextColumn::make('status')
                 ->searchable(),
 		];
@@ -127,37 +143,57 @@ class JobOrderMap extends MapTableWidget
 			// 	->section('Radius Filter')
 			// 	->selectUnit(),
             MapIsFilter::make('map'),
+            DateRangeFilter::make('date_requested')
+            ->withIndicator(),
             SelectFilter::make('status')
             ->label('Status')
-            ->options(fn () => OnlineJobOrder::query()
+            ->options(fn () => OnlineJobOrder::whereNull('date_accomplished')
                 ->distinct()
                 ->pluck('status', 'status')
-                ->reject(fn ($status) => $status === 'Accomplished')
                 ->toArray())
             ->placeholder('All Statuses')
             ->searchable(),
-            Filter::make('date_requested')
-                ->form([
-                    DatePicker::make('start_date')
-                    ->native(false)
-                    ->default(now()->subMonths(1))
-                    ->displayFormat('F d, Y'),
-                    DatePicker::make('end_date')
-                    ->native(false)
-                    ->default(now())
-                    ->displayFormat('F d, Y'),
-                ])
-                ->query(function (Builder $query, array $data): Builder {
-                    return $query
-                        ->when(
-                            $data['start_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('date_requested', '>=', $date),
-                        )
-                        ->when(
-                            $data['end_date'],
-                            fn(Builder $query, $date): Builder => $query->whereDate('date_requested', '<=', $date),
-                        );
-                }),
+            SelectFilter::make('division')
+            ->label('Division')
+            ->options(
+                fn () => \App\Models\Division::pluck('name', 'id')->toArray()
+            )
+            ->searchable()
+            ->placeholder('All Divisions')
+            ->query(function ($query, array $data) {
+                if (filled($data['value'])) {
+                    $query->whereHas('jocode.division', function ($q) use ($data) {
+                        $q->where('id', $data['value']);
+                    });
+                }
+            }),
+            SelectFilter::make('category')
+            ->label('Category')
+            ->options(
+                fn () => \App\Models\Category::pluck('name', 'id')->toArray()
+            )
+            ->searchable()
+            ->placeholder('All Categories')
+            ->query(function ($query, array $data) {
+                if (filled($data['value'])) {
+                    $query->whereHas('jocode.category', function ($q) use ($data) {
+                        $q->where('id', $data['value']);
+                    });
+                }
+            }),
+            // SelectFilter::make('jocode')
+            // ->label('JO Description')
+            // ->options(function () {
+            //     return \App\Models\JobOrderCode::pluck('description', 'id')->toArray();
+            // })
+            // ->searchable()
+            // ->placeholder('All Descriptions')
+            // ->query(function ($query, array $data) {
+            //     if (filled($data['value'])) {
+            //         $query->where('jocode_id', $data['value']);
+            //     }
+            // }),
+
 
 		];
 	}
@@ -165,12 +201,35 @@ class JobOrderMap extends MapTableWidget
 	protected function getTableActions(): array
 	{
 		return [
-			Tables\Actions\ViewAction::make(),
-			Tables\Actions\EditAction::make(),
+			Tables\Actions\ViewAction::make()
+            ->slideOver()
+            ->infolist([
+                TextEntry::make('jo_number')->label('JO Number'),
+                TextEntry::make('jocode.description')->label('Description'),
+                TextEntry::make('date_requested'),
+                TextEntry::make('account_number'),
+                TextEntry::make('address'),
+                TextEntry::make('barangay')
+                    ->getStateUsing(fn (OnlineJobOrder $record) =>
+                        DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A'),
+                TextEntry::make('requested_by'),
+                TextEntry::make('contact_number'),
+                TextEntry::make('processed_by')
+                    ->getStateUsing(fn (OnlineJobOrder $record) =>
+                        Username::where('code', $record->processed_by)->value('name') ?? ''),
+                TextEntry::make('status'),
+            ])
+            ->recordTitle(fn (OnlineJobOrder $record) => 'JO #' . $record->jo_number),
+			// Tables\Actions\EditAction::make(),
             // GoToAction::make()
             //     ->zoom(14),
 		];
 	}
+
+    protected function getTableRecordAction(): ?string
+    {
+        return 'view';
+    }
 
 	protected function getData(): array
 	{

@@ -22,6 +22,9 @@ class JobOrderPerType extends BaseWidget
             'totalJO' => 0,
             'totalAccomplished' => 0,
             'totalOngoing' => 0,
+            'totalReceivedToday' => 0,
+            'totalAccomplishedToday' => 0,
+            'totalOngoingToday' => 0,
             'avgTATSeconds' => 0,
             'avgTATReadable' => 'N/A',
         ];
@@ -66,15 +69,53 @@ class JobOrderPerType extends BaseWidget
         $totals['totalAccomplished'] = $jobOrders->whereNotNull('date_accomplished')->count();
         $totals['totalOngoing'] = $jobOrders->whereNull('date_accomplished')->count();
 
+        $totals['totalReceivedToday'] = $jobOrders->where('date_requested', '>=', Carbon::today())->count();
+        $totals['totalAccomplishedToday'] = $jobOrders->where('date_accomplished', '>=', Carbon::today())->count();
+        $totals['totalOngoingToday'] = $jobOrders
+            ->where('date_requested', '>=', Carbon::today())
+            ->whereNull('date_accomplished')
+            ->count();
+
         return $table
             ->query(JobOrderCode::whereIn('code', $filteredCodes)->orderBy('description', 'asc'))
             ->columns([
                 Tables\Columns\TextColumn::make('description')
                     ->label('Job Order Type')
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
+                Tables\Columns\TextColumn::make('receivedToday')
+                    ->label('Received Today')
+                    ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
+                        return number_format(
+                            $jobOrdersByCode->get($record->code, collect())
+                                ->where('date_requested', '>=', Carbon::today())
+                                ->count()
+                        );
+                    }),
+
+                Tables\Columns\TextColumn::make('accomplishedToday')
+                    ->label('Accomplished Today')
+                    ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
+                        return number_format(
+                            $jobOrdersByCode->get($record->code, collect())
+                                ->where('date_accomplished', '>=', Carbon::today())
+                                ->count()
+                        );
+                    }),
+
+                Tables\Columns\TextColumn::make('ongoingToday')
+                    ->label('Ongoing Today')
+                    ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
+                        return number_format(
+                            $jobOrdersByCode->get($record->code, collect())
+                                ->where('date_requested', '>=', Carbon::today())
+                                ->whereNull('date_accomplished')
+                                ->count()
+                        );
+                    }),
 
                 Tables\Columns\TextColumn::make('totalJO')
-                    ->label('Job Orders')
+                    ->label('Total Job Orders')
                     ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
                         return number_format(
                             $jobOrdersByCode->get($record->code, collect())->count()
@@ -82,33 +123,48 @@ class JobOrderPerType extends BaseWidget
                     }),
 
                 Tables\Columns\TextColumn::make('totalAccomplished')
-                    ->label('Accomplished')
+                    ->label('Total Accomplished')
                     ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
                         $orders = $jobOrdersByCode->get($record->code, collect());
-                        $total = $orders->count();
                         $accomplished = $orders->whereNotNull('date_accomplished')->count();
+                        return number_format($accomplished);
+                    })
+                    ->description(function (JobOrderCode $record): string {
+                        $total = OnlineJobOrder::where('job_order_code', $record->code)->count();
 
-                        if ($total === 0) return '0 (0%)';
+                        if ($total === 0) {
+                            return '0%';
+                        }
 
-                        $percentage = round(($accomplished / $total) * 100, 2);
-                        return number_format($accomplished) . " ({$percentage}%)";
-                    }),
+                        $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
+                            ->where('job_order_code', $record->code)->count();
+
+                        return round(($accomplished / $total) * 100, 2) . '%';
+                    }, position: 'below'),
 
                 Tables\Columns\TextColumn::make('totalOngoing')
-                    ->label('Ongoing')
+                    ->label('Total Ongoing')
                     ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
                         $orders = $jobOrdersByCode->get($record->code, collect());
-                        $total = $orders->count();
                         $ongoing = $orders->whereNull('date_accomplished')->count();
+                        return number_format($ongoing);
+                    })
+                    ->description(function (JobOrderCode $record): string {
+                        $total = OnlineJobOrder::where('job_order_code', $record->code)->count();
 
-                        if ($total === 0) return '0 (0%)';
+                        if ($total === 0) {
+                            return '0%';
+                        }
 
-                        $percentage = round(($ongoing / $total) * 100, 2);
-                        return number_format($ongoing) . " ({$percentage}%)";
-                    }),
+                        $accomplished = OnlineJobOrder::whereNull('date_accomplished')
+                            ->where('job_order_code', $record->code)->count();
+
+                        return round(($accomplished / $total) * 100, 2) . '%';
+                    }, position: 'below'),
 
                 Tables\Columns\TextColumn::make('avgTAT')
                     ->label('Avg TAT')
+                    ->wrap()
                     ->getStateUsing(function (JobOrderCode $record) use ($jobOrdersByCode) {
                         $orders = $jobOrdersByCode->get($record->code, collect());
 

@@ -37,7 +37,15 @@ class JobOrderOverview extends BaseWidget
         ->selectRaw('COUNT(*) / COUNT(DISTINCT DATE_FORMAT(date_accomplished, "%Y-%m")) as avg_per_month')
         ->value('avg_per_month');
 
+        // New Stats: Today
+        $today = now()->startOfDay();
+        $receivedToday = OnlineJobOrder::whereDate('date_requested', $today)->count();
+        $accomplishedToday = OnlineJobOrder::whereDate('date_accomplished', $today)->count();
+        $ongoingToday = OnlineJobOrder::whereDate('date_requested', $today)->whereNull('date_accomplished')->count();
+
         return [
+
+            // Stats TOtal
             Stat::make('Total Accomplished Job Orders', number_format($totalAccomplished).' ('.ceil($totalAccomplished/$jo->count()*100).'%)')
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('success'),
@@ -47,6 +55,8 @@ class JobOrderOverview extends BaseWidget
             Stat::make('Total Received Job Orders ', number_format($jo->count()))
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('info'),
+
+            // Stats Monthly
             Stat::make('Monthly Accomplished Job Orders', number_format($averageAccomplishedPerMonth))
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('success'),
@@ -57,6 +67,17 @@ class JobOrderOverview extends BaseWidget
             ->chart([7, 2, 10, 3, 15, 4, 17])
             ->color('info'),
 
+             // Stats Today
+            Stat::make('Accomplished Job Orders Today', number_format($accomplishedToday))
+                ->chart([3, 5, 2, 8, 1, 9, 6])
+                ->color('success'),
+
+            Stat::make('Ongoing Job Orders Today', number_format($ongoingToday))
+                ->chart([3, 5, 2, 8, 1, 9, 6])
+                ->color('warning'),
+            Stat::make('Received Job Orders Today', number_format($receivedToday))
+                ->chart([3, 5, 2, 8, 1, 9, 6])
+                ->color('info'),
         ];
     }
 }
