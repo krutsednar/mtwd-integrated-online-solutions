@@ -24,6 +24,9 @@ class JobOrderPerDivision extends BaseWidget
             'totalOngoing' => 0,
             'avgTATSeconds' => 0,
             'avgTATReadable' => 'N/A',
+            'totalAccomplishedToday' => 0,
+            'totalOngoingToday' => 0,
+            'totalReceivedToday' => 0,
         ];
 
         $divisions = Division::whereNotIn('code', ['2023', '2022'])->get();
@@ -57,6 +60,23 @@ class JobOrderPerDivision extends BaseWidget
                 $totalSeconds += $diff;
                 $count++;
             }
+
+            $accomplishedToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                ->whereDate('date_accomplished', Carbon::today())
+                ->count();
+
+            $ongoingToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                ->whereNull('date_accomplished')
+                ->whereDate('date_requested', Carbon::today())
+                ->count();
+
+            $receivedToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                ->whereDate('date_requested', Carbon::today())
+                ->count();
+
+            $totals['totalAccomplishedToday'] += $accomplishedToday;
+            $totals['totalOngoingToday'] += $ongoingToday;
+            $totals['totalReceivedToday'] += $receivedToday;
         }
 
         if ($count > 0) {
@@ -73,45 +93,85 @@ class JobOrderPerDivision extends BaseWidget
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                ->label('Division Name'),
+                ->label('Division Name')
+                ->wrap(),
+                Tables\Columns\TextColumn::make('receivedToday')
+                    ->label('Received Today')
+                    ->getStateUsing(function (Division $record) {
+                        $jobOrderCodes = $record->jocodes()->pluck('code');
+                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                            ->whereDate('date_requested', Carbon::today())
+                            ->count();
+                    }),
+                Tables\Columns\TextColumn::make('accomplishedToday')
+                    ->label('Accomplished Today')
+                    ->getStateUsing(function (Division $record) {
+                        $jobOrderCodes = $record->jocodes()->pluck('code');
+                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                            ->whereDate('date_accomplished', Carbon::today())
+                            ->count();
+                    }),
+
+                Tables\Columns\TextColumn::make('ongoingToday')
+                    ->label('Ongoing Today')
+                    ->getStateUsing(function (Division $record) {
+                        $jobOrderCodes = $record->jocodes()->pluck('code');
+                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
+                            ->whereNull('date_accomplished')
+                            ->whereDate('date_requested', Carbon::today())
+                            ->count();
+                    }),
                 Tables\Columns\TextColumn::make('totalJO')
-                    ->label('Job Orders')
+                    ->label('Total Received')
                     ->getStateUsing(function (Division $record) {
                         $jobOrderCodes = $record->jocodes()->pluck('code');
                         return number_format(OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)->count());
                     }),
                 Tables\Columns\TextColumn::make('totalAccomplished')
-                    ->label('Accomplished')
+                    ->label('Total Accomplished')
                     ->getStateUsing(function (Division $record) {
                         $jobOrderCodes = $record->jocodes()->pluck('code');
-                        $total = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)->count();
                         $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
                             ->whereIn('job_order_code', $jobOrderCodes)->count();
 
+                        return number_format($accomplished);
+                    })
+                    ->description(function (Division $record): string {
+                        $total = OnlineJobOrder::whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
+
                         if ($total === 0) {
-                            return '0 (0%)';
+                            return '0%';
                         }
 
-                        $percentage = round(($accomplished / $total) * 100, 2);
-                        return number_format($accomplished) . " ({$percentage}%)";
-                    }),
+                        $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
+                            ->whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
+
+                        return round(($accomplished / $total) * 100, 2) . '%';
+                    }, position: 'below'),
                 Tables\Columns\TextColumn::make('totalOngoing')
-                    ->label('Ongoing')
+                    ->label('Total Ongoing')
                     ->getStateUsing(function (Division $record) {
                         $jobOrderCodes = $record->jocodes()->pluck('code');
-                        $total = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)->count();
                         $ongoing = OnlineJobOrder::whereNull('date_accomplished')
                             ->whereIn('job_order_code', $jobOrderCodes)->count();
 
+                        return number_format($ongoing);
+                    })
+                    ->description(function (Division $record): string {
+                        $total = OnlineJobOrder::whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
+
                         if ($total === 0) {
-                            return '0 (0%)';
+                            return '0%';
                         }
 
-                        $percentage = round(($ongoing / $total) * 100, 2);
-                        return number_format($ongoing) . " ({$percentage}%)";
-                    }),
+                        $accomplished = OnlineJobOrder::whereNull('date_accomplished')
+                            ->whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
+
+                        return round(($accomplished / $total) * 100, 2) . '%';
+                    }, position: 'below'),
                 Tables\Columns\TextColumn::make('avgTAT')
                     ->label('Avg TAT')
+                    ->wrap()
                     ->getStateUsing(function (Division $record) {
                         $jobOrderCodes = $record->jocodes()->pluck('code');
 
@@ -142,6 +202,6 @@ class JobOrderPerDivision extends BaseWidget
                     }),
             ])
             ->paginated(false)
-            ->contentFooter(view('table.footer', $totals));
+            ->contentFooter(view('table.footer', ['totals' => $totals]));
     }
 }

@@ -30,6 +30,11 @@ class JobOrderCode extends Model
         return $this->belongsTo(Division::class, 'division_code', 'code');
     }
 
+     public function category()
+    {
+        return $this->belongsTo(Category::class, 'category_code', 'code');
+    }
+
     public function onlineJobOrders()
     {
         return $this->hasMany(OnlineJobOrder::class, 'job_order_code', 'code');
