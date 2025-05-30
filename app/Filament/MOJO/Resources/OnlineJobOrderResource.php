@@ -49,8 +49,6 @@ class OnlineJobOrderResource extends Resource
                     ->required()
                     ->readOnly()
                     ->reactive()
-                    // ->placeholder(Carbon::now()->format('Ym') . '' . str_pad(OnlineJobOrder::withTrashed()->count() + 1, 7, '0', STR_PAD_LEFT))
-                    // ->placeholder(Carbon::now()->format('Ym') . '' . str_pad((int)substr(OnlineJobOrder::latest()->value('jo_number'), -7) + 1, 7, '0', STR_PAD_LEFT))
                     ->placeholder(
                         fn () => Carbon::now()->format('Ym') .
                             str_pad(
@@ -219,10 +217,6 @@ class OnlineJobOrderResource extends Resource
                     ->description(fn (OnlineJobOrder $record): string => $record->registered_name, position: 'below')
                     ->searchable()
                     ->wrap(),
-                // Tables\Columns\TextColumn::make('registered_name')
-                // ->searchable(),
-                // Tables\Columns\TextColumn::make('meter_number')
-                // ->searchable(),
                 Tables\Columns\TextColumn::make('jocode.description')
                 ->label('Type')
                 ->searchable()
@@ -254,24 +248,9 @@ class OnlineJobOrderResource extends Resource
                     if (strlen($state) <= $column->getCharacterLimit()) {
                         return null;
                     }
-
-                    // Only render the tooltip if the column content exceeds the length limit.
                     return $state;
                 }),
-                // ->lineClamp(2),
-                // Tables\Columns\TextColumn::make('barangay')
-                // ->getStateUsing(function (OnlineJobOrder $record) {
-                //     return Barangay::where('id', $record->barangay)->value('name') ?? 'N/A';
-                // })
-                // ->searchable(),
-                // Tables\Columns\TextColumn::make('town')
-                // ->getStateUsing(function (OnlineJobOrder $record) {
-                //     return DB::table('cities')->where('id', $record->town)->value('name') ?? 'N/A';
-                // })
-                // ->searchable(),
 
-                // Tables\Columns\TextColumn::make('email')
-                // ->searchable(),
                 Tables\Columns\TextColumn::make('mode_received')
                 ->searchable(),
                 Tables\Columns\TextColumn::make('remarks')
@@ -283,7 +262,6 @@ class OnlineJobOrderResource extends Resource
                         return null;
                     }
 
-                    // Only render the tooltip if the column content exceeds the length limit.
                     return $state;
                 }),
                 Tables\Columns\TextColumn::make('processed_by')
@@ -403,28 +381,4 @@ class OnlineJobOrderResource extends Resource
     {
         return 1;
     }
-
-    // protected function mutateFormDataBeforeCreate(array $data): array
-    // {
-
-    //     $prefix = match ($data['town']) {
-    //         '21527' => 'SO',
-    //         '21520' => 'PO',
-    //         '21529' => 'TO',
-    //         default => 'MOJO',
-    //     };
-
-    //     $suffix = str_pad(
-    //         (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-    //             ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-    //             ->value('number') ?? 0) + 1,
-    //         7,
-    //         '0',
-    //         STR_PAD_LEFT
-    //     );
-
-    //     $data['jo_number'] = 'test'.$prefix . Carbon::now()->format('Ym') . $suffix;
-
-    //     return $data;
-    // }
 }
