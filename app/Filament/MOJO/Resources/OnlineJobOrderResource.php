@@ -29,8 +29,11 @@ use Filament\Tables\Columns\ViewColumn;
 use Filament\Forms\Components\DatePicker;
 use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\RelationManagers;
 
 class OnlineJobOrderResource extends Resource
@@ -51,32 +54,10 @@ class OnlineJobOrderResource extends Resource
                     ->reactive()
                     ->placeholder(
                         fn () =>
-                        // Carbon::now()->format('Ym') .
-                        //     str_pad(
-                        //         (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                        //             ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                        //             ->value('number') ?? 0) + 1,
-                        //         7,
-                        //         '0',
-                        //         STR_PAD_LEFT
-                        //     )
-
                         Carbon::now()->format('Ym').str_pad(OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                    ->value('number') + 1, 7, '0', STR_PAD_LEFT)
-
-                // $ym = Carbon::now()->format('Ym');
-                // $fullPrefix = $ym;
-
-                // $latestNumber = OnlineJobOrder::where('jo_number', 'like', "$fullPrefix%")
-                //     ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                //     ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                //     ->value('number') ?? 0;
-
-                // $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
-
-                // $data['jo_number'] = $fullPrefix . $suffix;
-                    )
+                        ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                        ->value('number') + 1, 7, '0', STR_PAD_LEFT)
+                        )
                     ,
                 Forms\Components\DateTimePicker::make('date_requested')
                     ->required(true)
@@ -209,11 +190,18 @@ class OnlineJobOrderResource extends Resource
             ->query(
                 OnlineJobOrder::query()->with('account')->orderBy('id', 'desc')
             )
+            ->headerActions([
+                ExportAction::make()->exports([
+                    ExcelExport::make('table')->fromTable()->withFilename('MTWD Online Job Orders - '.date('F d, Y')),
+                ])->color('success')
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('jo_number')
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('date_requested')
-                    ->dateTime('F d, Y'),
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
                 IconColumn::make('account.latitude')
                     ->label('Map View')
                     ->icon('fas-map-marked-alt')
@@ -237,21 +225,26 @@ class OnlineJobOrderResource extends Resource
                 Tables\Columns\TextColumn::make('jocode.description')
                 ->label('Type')
                 ->searchable()
-                ->wrap(),
+                ->wrap()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('jocode.category.name')
                 ->label('Category')
                 ->searchable()
-                ->wrap(),
+                ->wrap()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('jocode.division.name')
                 ->label('Division')
                 ->searchable()
-                ->wrap(),
+                ->wrap()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('requested_by')
                 ->searchable()
-                ->wrap(),
+                ->wrap()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('contact_number')
                 ->searchable()
-                ->wrap(),
+                ->wrap()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('address')
                 ->searchable()
                 ->getStateUsing(function (OnlineJobOrder $record) {
@@ -266,10 +259,12 @@ class OnlineJobOrderResource extends Resource
                         return null;
                     }
                     return $state;
-                }),
+                })
+                    ->toggleable(),
 
                 Tables\Columns\TextColumn::make('mode_received')
-                ->searchable(),
+                ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('remarks')
                 ->limit(30)
                 ->tooltip(function (TextColumn $column): ?string {
@@ -280,42 +275,26 @@ class OnlineJobOrderResource extends Resource
                     }
 
                     return $state;
-                }),
+                })
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('processed_by')
                 ->getStateUsing(function (OnlineJobOrder $record) {
                     return Username::where('code', $record->processed_by)->value('name') ?? '';
                 })
                 ->badge()
                 ->color('success')
-                ->searchable(),
+                ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('status')
-                ->searchable(),
+                ->searchable()
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('date_accomplished')
-                    ->dateTime('F d, Y'),
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
             ])
             ->filters([
-                Filter::make('date_requested')
-                    ->form([
-                        DatePicker::make('from')
-                        ->label('Date Requested - From')
-                        ->displayFormat('F d, Y')
-                        ->native(false),
-                        DatePicker::make('to')
-                        ->label('Date Requested - To')
-                        ->displayFormat('F d, Y')
-                        ->native(false),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('date_requested', '>=', $date),
-                            )
-                            ->when(
-                                $data['to'],
-                                fn (Builder $query, $date): Builder => $query->whereDate('date_requested', '<=', $date),
-                            );
-                    }),
+                DateRangeFilter::make('date_requested')
+                ->withIndicator(),
                 SelectFilter::make('status')
                     ->label('Status')
                     ->options(function () {
@@ -325,30 +304,34 @@ class OnlineJobOrderResource extends Resource
                             ->toArray();
                     })
                     ->placeholder('All Statuses'),
-                Filter::make('date_accomplished')
-                ->label('test')
-                    ->form([
-                        DatePicker::make('from')
-                        ->label('Date Accomplished - From')
-                        ->displayFormat('F d, Y')
-                        ->native(false),
-                        DatePicker::make('to')
-                        ->label('Date Accomplished - To')
-                        ->displayFormat('F d, Y')
-                        ->native(false),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['from'],
-                                fn (Builder $query, $date): Builder => $query->where('status', 'Accomplished')->whereDate('date_accomplished', '>=', $date),
-                            )
-                            ->when(
-                                $data['to'],
-                                fn (Builder $query, $date): Builder => $query->where('status', 'Accomplished')->whereDate('date_accomplished', '<=', $date),
-                            );
+                    SelectFilter::make('division')
+                    ->label('Division')
+                    ->options(
+                        fn () => \App\Models\Division::pluck('name', 'id')->toArray()
+                    )
+                    ->searchable()
+                    ->placeholder('All Divisions')
+                    ->query(function ($query, array $data) {
+                        if (filled($data['value'])) {
+                            $query->whereHas('jocode.division', function ($q) use ($data) {
+                                $q->where('id', $data['value']);
+                            });
+                        }
                     }),
-                // Tables\Filters\TrashedFilter::make(),
+                    SelectFilter::make('category')
+                    ->label('Category')
+                    ->options(
+                        fn () => \App\Models\Category::pluck('name', 'id')->toArray()
+                    )
+                    ->searchable()
+                    ->placeholder('All Categories')
+                    ->query(function ($query, array $data) {
+                        if (filled($data['value'])) {
+                        $query->whereHas('jocode.category', function ($q) use ($data) {
+                            $q->where('id', $data['value']);
+                        });
+                    }
+                }),
             ])
             ->actions([
                 ViewAction::make()
