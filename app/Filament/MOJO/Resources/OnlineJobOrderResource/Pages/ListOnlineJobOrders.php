@@ -25,25 +25,27 @@ class ListOnlineJobOrders extends ListRecords
             ->color('info')
             ->mutateFormDataUsing(function (array $data): array {
                 $prefix = match ($data['town']) {
-            '21527' => 'SO',
-            '21520' => 'PO',
-            '21529' => 'TO',
-            default => 'MOJO',
-        };
+                    '21527' => 'SO',
+                    '21520' => 'PO',
+                    '21529' => 'TO',
+                    default => 'MOJO',
+                };
 
-        $suffix = str_pad(
-            (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                ->value('number') ?? 0) + 1,
-            7,
-            '0',
-            STR_PAD_LEFT
-        );
+                $ym = Carbon::now()->format('Ym');
+                $fullPrefix = $prefix . $ym;
 
-        $data['jo_number'] = $prefix . Carbon::now()->format('Ym') . $suffix;
+                $latestNumber = OnlineJobOrder::latest()
+                    ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                    ->value('number') ?? 0;
 
-        return $data;
+                $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
+
+                $data['jo_number'] = $fullPrefix . $suffix;
+
+                return $data;
             })
+
             ,
         ];
     }
