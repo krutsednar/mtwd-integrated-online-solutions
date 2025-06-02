@@ -50,15 +50,32 @@ class OnlineJobOrderResource extends Resource
                     ->readOnly()
                     ->reactive()
                     ->placeholder(
-                        fn () => Carbon::now()->format('Ym') .
-                            str_pad(
-                                (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                                    ->value('number') ?? 0) + 1,
-                                7,
-                                '0',
-                                STR_PAD_LEFT
-                            )
+                        fn () =>
+                        // Carbon::now()->format('Ym') .
+                        //     str_pad(
+                        //         (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                        //             ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                        //             ->value('number') ?? 0) + 1,
+                        //         7,
+                        //         '0',
+                        //         STR_PAD_LEFT
+                        //     )
+
+                        Carbon::now()->format('Ym').str_pad(OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                    ->value('number') + 1, 7, '0', STR_PAD_LEFT)
+
+                // $ym = Carbon::now()->format('Ym');
+                // $fullPrefix = $ym;
+
+                // $latestNumber = OnlineJobOrder::where('jo_number', 'like', "$fullPrefix%")
+                //     ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                //     ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                //     ->value('number') ?? 0;
+
+                // $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
+
+                // $data['jo_number'] = $fullPrefix . $suffix;
                     )
                     ,
                 Forms\Components\DateTimePicker::make('date_requested')
@@ -125,7 +142,7 @@ class OnlineJobOrderResource extends Resource
 
                         // $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
                         $suffix = str_pad(
-                                (OnlineJobOrder::selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                (OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
                                     ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
                                     ->value('number') ?? 0) + 1,
                                 7,
