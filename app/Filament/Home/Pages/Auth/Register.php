@@ -32,7 +32,7 @@ class Register extends BaseRegister
                         $this->getBirthdayFormComponent(),
                         $this->getDivisionFormComponent(),
                         $this->getMobileNumberFormComponent(),
-                        $this->getEmailFormComponent(),
+                        $this->getEmailFormComponent()->unique(column: 'email'),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
                         $this->getIsApprovedFormComponent(),
@@ -47,7 +47,8 @@ class Register extends BaseRegister
     {
         return TextInput::make('employee_number')
             ->label('Employee Number (format: xx-xxxx)')
-            ->required();
+            ->required()
+            ->unique(column: 'employee_number');
     }
 
     protected function getFirstNameFormComponent(): Component
@@ -86,6 +87,7 @@ class Register extends BaseRegister
     protected function getDivisionFormComponent(): Component
     {
         return Select::make('division_id')
+            ->label('Division')
             ->options(function () {
                 return Division::orderBy('name')->pluck('name', 'code')->toArray();
             })
@@ -97,7 +99,8 @@ class Register extends BaseRegister
             // ->length(10)
             ->required(true)
             ->prefix('+63')
-            ->maxLength(10);
+            ->maxLength(10)
+            ->unique(column: 'mobile_number');
     }
     protected function getIsApprovedFormComponent(): Component
     {

@@ -51,7 +51,7 @@ class Profile extends EditProfile
                         $this->getBirthdayFormComponent(),
                         $this->getDivisionFormComponent(),
                         $this->getMobileNumberFormComponent(),
-                        $this->getEmailFormComponent()->required(false),
+                        $this->getEmailFormComponent()->required(false)->unique(column: 'email'),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
                     ])
@@ -63,7 +63,8 @@ class Profile extends EditProfile
     {
         return TextInput::make('employee_number')
             ->label('Employee Number (format: xx-xxxx)')
-            ->required();
+            ->required()
+            ->unique(column: 'employee_number');
     }
 
     protected function getFirstNameFormComponent(): Component
@@ -113,7 +114,8 @@ class Profile extends EditProfile
             // ->length(10)
             ->required(true)
             ->prefix('+63')
-            ->maxLength(10);
+            ->maxLength(10)
+            ->unique(column: 'mobile_number');
     }
 
     protected function afterSave(): void

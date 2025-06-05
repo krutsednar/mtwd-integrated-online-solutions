@@ -116,7 +116,7 @@ class User extends Authenticatable implements FilamentUser
 
     public function division()
     {
-        return $this->belongsTo(Division::class, 'division_code', 'code');
+        return $this->belongsTo(Division::class, 'division_id', 'code');
     }
 
     public function getFullNameAttribute()
