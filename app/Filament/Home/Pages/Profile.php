@@ -4,16 +4,20 @@ namespace App\Filament\Pages;
 
 use Filament\Forms;
 use Filament\Forms\Form;
+use Filament\Facades\Filament;
 use Filament\Pages\Auth\EditProfile;
 use Filament\Forms\Components\Select;
 use Illuminate\Support\Facades\Storage;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
+use Illuminate\Support\Facades\Redirect;
 use Filament\Forms\Components\DatePicker;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
 
 class Profile extends EditProfile
 {
+    protected ?string $heading = 'Edit My Profile';
+
     public function form(Form $form): Form
     {
         return $form
@@ -84,8 +88,7 @@ class Profile extends EditProfile
     }
     protected function getSuffixFormComponent(): Component
     {
-        return TextInput::make('suffix')
-            ;
+        return TextInput::make('suffix');
     }
     protected function getBirthdayFormComponent(): Component
     {
@@ -133,5 +136,10 @@ class Profile extends EditProfile
             ->required(true)
             ->prefix('+63')
             ->maxLength(10);
+    }
+
+    protected function afterSave(): void
+    {
+        $this->redirect(Filament::getCurrentPanel()->getUrl());
     }
 }

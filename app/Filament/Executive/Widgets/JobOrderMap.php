@@ -314,6 +314,13 @@ class JobOrderMap extends MapTableWidget
 
     protected function getTableRecordsPerPageSelectOptions(): array
     {
-        return [10000, 25, 50, 100];
+        return [25, 50, 100];
+    }
+
+    protected function getScripts(): array
+    {
+        return [
+            asset('js/job-order-map.js'),
+        ];
     }
 }

@@ -5,10 +5,13 @@ namespace App\Filament\Admin\Resources;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
+use App\Models\Division;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Hash;
+use App\Filament\Imports\UserImporter;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -53,35 +56,39 @@ class UserResource extends Resource
                 Forms\Components\DatePicker::make('birthday')
                         ->displayFormat('F d, Y')
                         ->native(false),
-                Forms\Components\Select::make('division')
-                    ->options([
-                        'OGM'     => 'Office of the General Manager',
-                        'OBOD'     => 'Office of the Board of Directors',
-                        'OAGM-TSO'  => 'Office of the Assistant General Manager for Technical Services and Operations',
-                        // 'OAGM-FA'  => 'Office of the Assistant General Manager for Finance and Administration',
-                        'AFD' => 'Administration and Finance Department',
-                        'TSOD'        => 'Technical Services and Operations Department',
-                        'CPPAD'     => 'Corporate Planning and Public Affairs Division',
-                        'ICSD'     => 'Internal Control and System Development Division',
-                        'LD'   => 'Legal Division',
-                        'ICTD'    => 'Information and Communication Technology Division',
-                        'HRD'    => 'Human Resource Department',
-                        'GSD'  => 'General Service Division',
-                        'PMMD'  => 'Property and Material Management Division',
-                        'ACTD'    => 'Accounting Division',
-                        'CSD'     => 'Customer Service Division',
-                        'COMMD'    => 'Commercial Division',
-                        'ED'   => 'Engineering Division',
-                        'COD'     => 'Construction Division',
-                        'EWRD'    => 'Environment and Water Resources Division',
-                        'PROD'    => 'Production Division',
-                        'PAMD'     => 'Pipeline and Appurtenances Maintenance Division',
-                        // 'WQS'    => 'Water Quality Section',
-                        // 'TAB'     => 'Treasury and Budget Section',
-                        // 'BAC'       => 'Bids and Awards Committee',
-                        // 'WHS'       => 'Warehouse Section',
-                    ])
-                    ->required(),
+                Forms\Components\Select::make('division_id')
+                    ->options(function () {
+                        return Division::pluck('name', 'code')->toArray();
+                    })
+                    // ->relationship('division', 'name')
+                    // ->multiple()
+                    // ->preload()
+                    ->searchable(),
+                // Forms\Components\Select::make('division')
+                //     ->options([
+                //         'OGM'     => 'Office of the General Manager',
+                //         'OBOD'     => 'Office of the Board of Directors',
+                //         'OAGM-TSO'  => 'Office of the Assistant General Manager for Technical Services and Operations',
+                //         // 'OAGM-FA'  => 'Office of the Assistant General Manager for Finance and Administration',
+                //         'AFD' => 'Administration and Finance Department',
+                //         'TSOD'        => 'Technical Services and Operations Department',
+                //         'CPPAD'     => 'Corporate Planning and Public Affairs Division',
+                //         'ICSD'     => 'Internal Control and System Development Division',
+                //         'LD'   => 'Legal Division',
+                //         'ICTD'    => 'Information and Communication Technology Division',
+                //         'HRD'    => 'Human Resource Department',
+                //         'GSD'  => 'General Service Division',
+                //         'PMMD'  => 'Property and Material Management Division',
+                //         'ACTD'    => 'Accounting Division',
+                //         'CSD'     => 'Customer Service Division',
+                //         'COMMD'    => 'Commercial Division',
+                //         'ED'   => 'Engineering Division',
+                //         'COD'     => 'Construction Division',
+                //         'EWRD'    => 'Environment and Water Resources Division',
+                //         'PROD'    => 'Production Division',
+                //         'PAMD'     => 'Pipeline and Appurtenances Maintenance Division',
+                //     ])
+                    // ->required(),
                 Forms\Components\TextInput::make('email')
                     ->email(),
                 Forms\Components\TextInput::make('mobile_number')
@@ -89,6 +96,12 @@ class UserResource extends Resource
                     ->numeric()
                     ->prefix('+63'),
                 Forms\Components\TextInput::make('address')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('jo_id')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('prod_id')
                     ->maxLength(255)
                     ->default(null),
                 Forms\Components\TextInput::make('avatar')
@@ -114,6 +127,14 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            // ->headerActions([
+            //     // ImportAction::make()
+            //     //     ->importer(UserImporter::class)
+            //      ExcelImportAction::make()
+            //     ->slideOver()
+            //     ->color("primary")
+            //     ->use(UserImporter::class),
+            // ])
             ->columns([
                 Tables\Columns\TextColumn::make('employee_number')
                     ->searchable(),
@@ -132,7 +153,9 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('birthday')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('division')
+                // Tables\Columns\TextColumn::make('division')
+                //     ->searchable(),
+                Tables\Columns\TextColumn::make('division.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
@@ -145,6 +168,10 @@ class UserResource extends Resource
                 // Tables\Columns\TextColumn::make('locale')
                 //     ->searchable(),
                 ToggleColumn::make('is_approved'),
+                Tables\Columns\TextColumn::make('jo_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('prod_id')
+                    ->searchable(),
                 // Tables\Columns\TextColumn::make('email_verified_at')
                 //     ->dateTime()
                 //     ->sortable(),
