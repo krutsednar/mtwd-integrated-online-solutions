@@ -30,6 +30,6 @@ class JoDispatch extends Model
 
     public function jo_users()
     {
-        return $this->hasMany(Username::class, 'jo_user', 'code');
+        return $this->hasMany(User::class, 'jo_user', 'jo_id');
     }
 }

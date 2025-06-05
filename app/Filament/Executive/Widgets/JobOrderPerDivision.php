@@ -29,7 +29,7 @@ class JobOrderPerDivision extends BaseWidget
             'totalReceivedToday' => 0,
         ];
 
-        $divisions = Division::whereNotIn('code', ['2023', '2022'])->get();
+        $divisions = Division::whereIn('code', ['16', '2016', '2017', '2018', '2021', '2024', '2020'])->get();
 
         $totalSeconds = 0;
         $count = 0;
@@ -89,7 +89,7 @@ class JobOrderPerDivision extends BaseWidget
 
         return $table
             ->query(
-                Division::whereNotIn('code', ['2023', '2022'])
+                Division::whereIn('code', ['16', '2016', '2017', '2018', '2021', '2024', '2020'])
             )
             ->columns([
                 Tables\Columns\TextColumn::make('name')

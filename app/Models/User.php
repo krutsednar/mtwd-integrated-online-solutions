@@ -58,6 +58,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'avatar',
         'is_approved',
+        'jo_id',
+        'prod_id',
     ];
 
     /**
@@ -89,7 +91,7 @@ class User extends Authenticatable implements FilamentUser
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
         // return $this->hasVerifiedEmail() && $this->is_approved;
         if ($panel->getId() === 'executive') {
-            return $this->hasRole('super_admin') && $this->hasVerifiedEmail();
+            return $this->hasRole('Executive') && $this->is_approved;
         }
         return $this->is_approved;
     }
@@ -112,6 +114,14 @@ class User extends Authenticatable implements FilamentUser
         return $this->avatar ? Storage::url($this->avatar) : null;
     }
 
+    public function division()
+    {
+        return $this->belongsTo(Division::class, 'division_code', 'code');
+    }
 
+    public function getFullNameAttribute()
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
 
 }

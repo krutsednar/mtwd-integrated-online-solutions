@@ -22,6 +22,10 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         ->logFillable();
     }
 
+    // protected $casts = [
+    //     'dispatched' => 'array',
+    // ];
+
     protected $dates = [
         'created_at',
         'updated_at',
@@ -31,6 +35,7 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'date_dispatched',
         'date_accomplished',
         'date_verified',
+        'date_returned',
     ];
 
     protected $fillable = [
@@ -70,6 +75,8 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'acknowledge_by',
         'verified_by',
         'date_verified',
+        'date_returned',
+        'pad_received_by',
     ];
 
     protected $appends = [

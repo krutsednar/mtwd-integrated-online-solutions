@@ -29,4 +29,9 @@ class Division extends Model
         return $this->hasMany(JobOrderCode::class, 'division_code', 'code');
     }
 
+    public function users()
+    {
+        return $this->hasMany(User::class, 'division_id', 'code');
+    }
+
 }
