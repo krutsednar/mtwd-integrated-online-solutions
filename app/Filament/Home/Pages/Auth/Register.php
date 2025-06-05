@@ -1,10 +1,11 @@
 <?php
 
 namespace App\Filament\Home\Pages\Auth;
+use App\Models\Division;
 use Filament\Pages\Page;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\Toggle;
 
+use Filament\Forms\Components\Toggle;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\DatePicker;
@@ -31,7 +32,7 @@ class Register extends BaseRegister
                         $this->getBirthdayFormComponent(),
                         $this->getDivisionFormComponent(),
                         $this->getMobileNumberFormComponent(),
-                        $this->getEmailFormComponent(),
+                        $this->getEmailFormComponent()->unique(column: 'email'),
                         $this->getPasswordFormComponent(),
                         $this->getPasswordConfirmationFormComponent(),
                         $this->getIsApprovedFormComponent(),
@@ -46,7 +47,8 @@ class Register extends BaseRegister
     {
         return TextInput::make('employee_number')
             ->label('Employee Number (format: xx-xxxx)')
-            ->required();
+            ->required()
+            ->unique(column: 'employee_number');
     }
 
     protected function getFirstNameFormComponent(): Component
@@ -84,34 +86,11 @@ class Register extends BaseRegister
     }
     protected function getDivisionFormComponent(): Component
     {
-        return Select::make('division')
-            ->options([
-                'OGM'     => 'Office of the General Manager',
-                'OBOD'     => 'Office of the Board of Directors',
-                'OAGM-TSO'  => 'Office of the Assistant General Manager for Technical Services and Operations',
-                // 'OAGM-FA'  => 'Office of the Assistant General Manager for Finance and Administration',
-                'AFD' => 'Administration and Finance Department',
-                'TSOD'        => 'Technical Services and Operations Department',
-                'CPPAD'     => 'Corporate Planning and Public Affairs Division',
-                'ICSD'     => 'Internal Control and System Development Division',
-                'LD'   => 'Legal Division',
-                'ICTD'    => 'Information and Communication Technology Division',
-                'HRD'    => 'Human Resource Department',
-                'GSD'  => 'General Service Division',
-                'PMMD'  => 'Property and Material Management Division',
-                'ACTD'    => 'Accounting Division',
-                'CSD'     => 'Customer Service Division',
-                'COMMD'    => 'Commercial Division',
-                'ED'   => 'Engineering Division',
-                'COD'     => 'Construction Division',
-                'EWRD'    => 'Environment and Water Resources Division',
-                'PROD'    => 'Production Division',
-                'PAMD'     => 'Pipeline and Appurtenances Maintenance Division',
-                // 'WQS'    => 'Water Quality Section',
-                // 'TAB'     => 'Treasury and Budget Section',
-                // 'BAC'       => 'Bids and Awards Committee',
-                // 'WHS'       => 'Warehouse Section',
-            ])
+        return Select::make('division_id')
+            ->label('Division')
+            ->options(function () {
+                return Division::orderBy('name')->pluck('name', 'code')->toArray();
+            })
             ->required();
     }
     protected function getMobileNumberFormComponent(): Component
@@ -120,7 +99,8 @@ class Register extends BaseRegister
             // ->length(10)
             ->required(true)
             ->prefix('+63')
-            ->maxLength(10);
+            ->maxLength(10)
+            ->unique(column: 'mobile_number');
     }
     protected function getIsApprovedFormComponent(): Component
     {

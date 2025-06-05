@@ -17,7 +17,7 @@ class LoginResponse implements LoginResponseContract
 
          $user = auth()->user();
 
-        if (blank($user->name)) {
+        if (blank($user->name) OR blank($user->division_id) OR is_null($user->name) OR is_null($user->division_id)) {
             return redirect(Profile::getUrl());
         } else {
             return redirect()->intended(Filament::getUrl());
