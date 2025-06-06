@@ -1,9 +1,10 @@
-<div class="w-full">
+<div class="items-center justify-center w-full p-2">
+
 
             <form
                 action="{{ filament()->getLogoutUrl() }}"
                 method="post"
-                class="w-full"
+                class="w-full p-4"
             >
                 @csrf
 
