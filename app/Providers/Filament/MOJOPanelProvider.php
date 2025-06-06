@@ -32,6 +32,7 @@ class MOJOPanelProvider extends PanelProvider
         return $panel
             ->id('MOJO')
             ->path('MOJO')
+
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
@@ -62,6 +63,7 @@ class MOJOPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->navigationItems([
+
                 NavigationItem::make('Messenger')
                     ->url(url('messenger'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-chat-bubble-left-right')

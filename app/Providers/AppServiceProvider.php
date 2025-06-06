@@ -74,6 +74,21 @@ class AppServiceProvider extends ServiceProvider
             ->modalHeading('MTWD Information Systems');
         });
 
+        // FilamentView::registerRenderHook(
+        //     PanelsRenderHook::SIDEBAR_NAV_START ,
+        //     fn (): string => Blade::render('@livewire(\'panel-title\')'),
+        // );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SIDEBAR_NAV_START,
+            fn (): string => Blade::render(
+                <<<'BLADE'
+                    @livewire('panel-title', ['panelId' => $panelId])
+                BLADE,
+                ['panelId' => Filament::getCurrentPanel()->getId()]
+            ),
+        );
+
         FilamentView::registerRenderHook(
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
             fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
