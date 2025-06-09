@@ -188,4 +188,18 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         return 'location';
     }
 
+    public function joDispatches()
+    {
+        return $this->hasMany(JoDispatch::class, 'jo_number', 'jo_number');
+    }
+
+    public function joAccomplishments()
+    {
+        return $this->hasMany(JoAccomplishment::class, 'jo_number', 'jo_number');
+    }
+
+    public function jobOrderCode()
+    {
+        return $this->belongsTo(JobOrderCode::class, 'job_order_code', 'code');
+    }
 }

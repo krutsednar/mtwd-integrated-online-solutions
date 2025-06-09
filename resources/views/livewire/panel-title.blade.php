@@ -20,5 +20,5 @@
         @elseif($panelId == 'MOCA')
         <span class="font-bold size-xl">ONLINE CAREER APPLICATION</span>
     @endif
-    <div style="margin-top: 10px;" class="text-sm text-center">Welcome, <b>{{ auth()->user()->name}}</b></div>
+    <div style="margin-top: 10px;" class="text-sm text-center">Welcome, <b>{{ auth()->user()->first_name.' '.auth()->user()->last_name}}</b></div>
 </div>
