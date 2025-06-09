@@ -23,7 +23,7 @@ class JoAccomplishment extends Model
         'jo_user',
     ];
 
-    public function jo_number()
+    public function onlineJobOrder()
     {
         return $this->belongsTo(OnlineJobOrder::class, 'jo_number', 'jo_number');
     }

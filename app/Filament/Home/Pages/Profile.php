@@ -106,6 +106,7 @@ class Profile extends EditProfile
             ->options(function () {
                 return Division::orderBy('name')->pluck('name', 'code')->toArray();
             })
+            ->searchable()
             ->required();
     }
     protected function getMobileNumberFormComponent(): Component

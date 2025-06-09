@@ -200,9 +200,21 @@ class OnlineJobOrderResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->query(
-                OnlineJobOrder::query()->with('account')->orderBy('id', 'desc')
-            )
+            ->query(function () {
+                $user = auth()->user();
+
+                // Check if the user's division_id is 1, 2, or 3
+                if (in_array($user->division_id, [2022, 2023, 7, 2, 3, 4, 5])) {
+                    return OnlineJobOrder::query()
+                        ->with('account')
+                        ->orderBy('id', 'desc');
+                }
+
+                // Otherwise, filter by the user's division_id
+                return OnlineJobOrder::where('division_concerned', $user->division_id)
+                    ->with('account')
+                    ->orderBy('id', 'desc');
+            })
             ->headerActions([
                 ExportAction::make()->exports([
                     ExcelExport::make('table')->fromTable()->withFilename('MTWD Online Job Orders - '.date('F d, Y')),
@@ -511,7 +523,7 @@ class OnlineJobOrderResource extends Resource
                             $component->state($displayName);
                         })
                         ->dehydrateStateUsing(function ($record) {
-                            return $record->processed_by; // Store only the user ID
+                            return auth()->user()->jo_id; // Store only the user ID
                         })
                         ->readOnly(),
 
