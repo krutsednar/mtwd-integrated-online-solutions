@@ -306,7 +306,7 @@ class OnlineJobOrderResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('processed_by')
                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    return Username::where('code', $record->processed_by)->value('name') ?? '';
+                    return User::where('jo_id', $record->processed_by)->value('first_name').' '.User::where('jo_id', $record->processed_by)->value('last_name') ?? '';
                 })
                 ->badge()
                 ->color('success')
