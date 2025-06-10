@@ -56,4 +56,5 @@ Route::get('/executive/job-order/{id}', function ($id) {
         'total' => $total,
         'previous_descriptions' => $previousDescriptions,
     ]);
-});
+})
+->middleware(['auth']);
