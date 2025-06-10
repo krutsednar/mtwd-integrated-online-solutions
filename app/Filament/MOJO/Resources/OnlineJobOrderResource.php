@@ -14,6 +14,7 @@ use Filament\Forms\Get;
 use App\Models\Barangay;
 use App\Models\Username;
 use Filament\Forms\Form;
+use App\Models\JoDispatch;
 use Filament\Tables\Table;
 use App\Models\JobOrderCode;
 use Illuminate\Http\Request;
@@ -46,6 +47,7 @@ use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\RelationManagers;
+use App\Models\JoAccomplishment;
 
 class OnlineJobOrderResource extends Resource
 {
@@ -376,23 +378,27 @@ class OnlineJobOrderResource extends Resource
                     is_null($record->lat) && is_null($record->lng)
                 )
                 ->form([
-                    // Map::make('location')
-                    //     ->defaultLocation(fn ($record) => [17.6223543, 121.7214678])
-                    //     ->defaultZoom(17)
-                    //     ->live()
-                    //     ->reactive()
-                    //     ->afterStateUpdated(function ($state, callable $get, callable $set) {
-                    //         $set('lat', $state['lat']);
-                    //         $set('lng', $state['lng']);
-                    //     }),
+
                     Map::make('location')
                     ->defaultLocation(fn () => [17.6223543, 121.7214678])
                     ->defaultZoom(17)
                     ->live()
                     ->reactive()
                     ->extraAttributes([
-                        'x-init' => 'initLocationPicker($wire)',
+                        'x-init' => <<<JS
+                            if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(function(position) {
+                                    $wire.set('data.location', {
+                                        lat: position.coords.latitude,
+                                        lng: position.coords.longitude
+                                    });
+                                });
+                            }
+                        JS,
                     ])
+                    // ->extraAttributes([
+                    //     'x-init' => 'initLocationPicker($wire)',
+                    // ])
                     ->afterStateUpdated(function ($state, callable $get, callable $set) {
                         $set('lat', $state['lat']);
                         $set('lng', $state['lng']);
@@ -748,7 +754,7 @@ class OnlineJobOrderResource extends Resource
 
                                         return User::where('division_id', $divisionCode)
                                             ->get()
-                                            ->pluck('full_name', 'jo_id')
+                                            ->pluck('full_name', 'employee_number')
                                             ->toArray();
                                     })
                                     ->afterStateHydrated(function (callable $set, callable $get) {
@@ -790,6 +796,33 @@ class OnlineJobOrderResource extends Resource
                             ->send();
                     })
                     ->color('warning'),
+
+                    Tables\Actions\Action::make('cancelDispatch')
+                    ->label('')
+                    ->icon('fas-person-circle-xmark')
+                    ->tooltip('Cancel Dispatch')
+                    ->modalHeading('Cancel Job Order Dispatch?')
+                    ->requiresConfirmation()
+                    ->color('danger')
+                    ->size('xl')
+                    ->visible(fn ($record) =>
+                        $record->status === 'Dispatched' && !is_null($record->date_dispatched) && is_null($record->date_accomplished)
+                    )
+                    ->action(function ($record) {
+                        $record->update([
+                            'date_dispatched' => null,
+                            'status' => 'For Dispatch',
+                            'dispatched_by' => '',
+                        ]);
+
+                        JoDispatch::where('jo_number', $record->jo_number)->delete();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cancelled Job Order Dispatch')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
 
                     Tables\Actions\EditAction::make('accomplish')
                     ->label('')
@@ -845,7 +878,7 @@ class OnlineJobOrderResource extends Resource
                                 ->disabled()
                                 ->formatStateUsing(function (OnlineJobOrder $record) {
                                     $joNumber = $record->jo_number;
-                                    $test = User::whereIn('jo_id', \App\Models\JoDispatch::where('jo_number', $joNumber)->pluck('jo_user'))->get()
+                                    $test = User::whereIn('employee_number', \App\Models\JoDispatch::where('jo_number', $joNumber)->pluck('jo_user'))->get()
                                             ->pluck('full_name')
                                             ->toArray();
 
@@ -878,7 +911,7 @@ class OnlineJobOrderResource extends Resource
 
                                         return User::where('division_id', $divisionCode)
                                             ->get()
-                                            ->pluck('full_name', 'jo_id')
+                                            ->pluck('full_name', 'employee_number')
                                             ->toArray();
                                     })
                                     ->afterStateHydrated(function (callable $set, callable $get) {
@@ -922,6 +955,37 @@ class OnlineJobOrderResource extends Resource
                             ->send();
                     })
                     ->color('warning'),
+
+                Tables\Actions\Action::make('cancelAccomplish')
+                    ->label('')
+                    ->icon('fas-circle-xmark')
+                    ->tooltip('Cancel Accomplishment')
+                    ->modalHeading('Cancel Job Order Accomplishment?')
+                    ->requiresConfirmation()
+                    ->color('danger')
+                    ->size('xl')
+                    ->visible(fn ($record) =>
+                        $record->status === 'Accomplished' && !is_null($record->date_accomplished) && is_null($record->date_returned)
+                    )
+                    ->action(function ($record) {
+                        $record->update([
+                            'date_accomplished' => null,
+                            'status' => 'Dispatched',
+                            'accomplishment_processed_by' => null,
+                            'field_findings' => null,
+                            'actions_taken' => null,
+                            'acknowledge_by' => null,
+                            'recommendations' => null,
+                        ]);
+
+                        JoAccomplishment::where('jo_number', $record->jo_number)->delete();
+
+                        \Filament\Notifications\Notification::make()
+                            ->title('Cancelled Job Order Accomplishment')
+                            ->success()
+                            ->send();
+                    })
+                    ->requiresConfirmation(),
                 Tables\Actions\Action::make('Return')
                     ->label('')
                     ->icon('fas-file-export')
