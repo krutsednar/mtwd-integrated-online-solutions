@@ -55,14 +55,22 @@
 
         jobOrders.forEach(order => {
             if (order.lat && order.lng) {
-                let marker = L.marker([order.lat, order.lng], {icon: joIcon})
-                    .bindPopup(`<b>JO No.: ${order.jo_number}</b>
-                    <br>Date Requested: ${order.date_requested}
-                    <br>Account Number: ${order.account_number}
-                    <br>Registered Name: ${order.registered_name}
-                    <br>Type: ${order.jobOrderCode?.description ?? 'N/A'}
-                    <br>Division Concerned: ${order.jobOrderCode?.division?.name ?? 'N/A'}
-                    <br>Status: ${order.status}
+                const previous = order.previous_descriptions?.length
+                    ? order.previous_descriptions.join(', ')
+                    : 'None';
+
+                let marker = L.marker([order.lat, order.lng], { icon: joIcon })
+                    .bindPopup(`
+                        <b>JO No.: ${order.jo_number}</b>
+                        <br>Date Requested: ${order.date_requested}
+                        <br>Account Number: ${order.account_number}
+                        <br>Registered Name: ${order.registered_name}
+                        <br>Address: ${order.address}
+                        <br>Type: ${order.jobOrderCode?.description ?? 'N/A'}
+                        <br>Division Concerned: ${order.jobOrderCode?.division?.name ?? 'N/A'}
+                        <br>Status: ${order.status}
+                        <br><b>Total Job Orders:</b> ${order.total ?? 1}
+                        <br><b>Previous Job Orders:</b> ${previous}
                     `)
                     .addTo(map);
                 markers.push(marker);

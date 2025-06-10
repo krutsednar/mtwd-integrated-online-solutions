@@ -77,7 +77,16 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'date_verified',
         'date_returned',
         'pad_received_by',
+        'is_synced',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'is_synced' => 'boolean',
+            'is_online' => 'boolean',
+        ];
+    }
 
     protected $appends = [
         'location',
