@@ -10,7 +10,6 @@
         Hide Job Orders
     </x-filament::button>
 
-
     <div id="map" style="height: 90vh;" class="w-full"></div>
 
     <!-- Leaflet (JS/CSS) -->
@@ -59,20 +58,46 @@
                     ? order.previous_descriptions.join(', ')
                     : 'None';
 
+                // let marker = L.marker([order.lat, order.lng], { icon: joIcon })
+                //     .bindPopup(`
+                //         <b>JO No.: ${order.jo_number}</b>
+                //         <br><b>Date Requested:</b> ${order.date_requested}
+                //         <br><b>Account Number:</b> ${order.account_number}
+                //         <br><b>Registered Name:</b> ${order.registered_name}
+                //         <br><b>Address:</b> ${order.address}
+                //         <br><b>Type:</b> ${order.jobOrderCode?.description ?? 'N/A'}
+                //         <br><b>Division Concerned:</b> ${order.jobOrderCode?.division?.name ?? 'N/A'}
+                //         <br><b>Status:</b> ${order.status}
+                //         <br><b>Total Job Orders:</b> ${order.total ?? 1}
+                //         <br><b>Previous Job Orders:</b> ${previous}
+                //     `)
+                //     .addTo(map);
+
                 let marker = L.marker([order.lat, order.lng], { icon: joIcon })
-                    .bindPopup(`
-                        <b>JO No.: ${order.jo_number}</b>
-                        <br>Date Requested: ${order.date_requested}
-                        <br>Account Number: ${order.account_number}
-                        <br>Registered Name: ${order.registered_name}
-                        <br>Address: ${order.address}
-                        <br>Type: ${order.jobOrderCode?.description ?? 'N/A'}
-                        <br>Division Concerned: ${order.jobOrderCode?.division?.name ?? 'N/A'}
-                        <br>Status: ${order.status}
-                        <br><b>Total Job Orders:</b> ${order.total ?? 1}
-                        <br><b>Previous Job Orders:</b> ${previous}
-                    `)
+                    .on('click', function () {
+                        fetch(`/executive/job-order/${order.id}`)
+                            .then(res => res.json())
+                            .then(data => {
+                                const previous = data.previous_descriptions?.length
+                                    ? data.previous_descriptions.join(', ')
+                                    : 'None';
+
+                                marker.bindPopup(`
+                                    <b>JO No.:</b> ${data.jo_number}<br>
+                                    <b>Date Requested:</b> ${data.date_requested}<br>
+                                    <b>Account Number:</b> ${data.account_number}<br>
+                                    <b>Registered Name:</b> ${data.registered_name}<br>
+                                    <b>Address:</b> ${data.address}<br>
+                                    <b>Type:</b> ${data.jobOrderCode?.description ?? 'N/A'}<br>
+                                    <b>Division Concerned:</b> ${data.jobOrderCode?.division?.name ?? 'N/A'}<br>
+                                    <b>Status:</b> ${data.status}<br>
+                                    <b>Total Job Orders:</b> ${data.total ?? 1}<br>
+                                    <b>Previous Job Orders:</b> ${previous}
+                                `).openPopup();
+                            });
+                    })
                     .addTo(map);
+
                 markers.push(marker);
             }
         });
