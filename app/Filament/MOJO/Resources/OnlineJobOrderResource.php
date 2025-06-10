@@ -20,9 +20,11 @@ use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Models\OnlineJobOrder;
 use Filament\Resources\Resource;
+use App\Livewire\JobOrderHistory;
 use Illuminate\Support\Collection;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Filters\Filter;
+use Filament\Support\Enums\MaxWidth;
 use Illuminate\Support\Facades\Http;
 use Filament\Infolists\Components\Card;
 use Filament\Tables\Actions\ViewAction;
@@ -35,15 +37,15 @@ use Filament\Tables\Filters\SelectFilter;
 use Illuminate\Database\Eloquent\Builder;
 use Filament\Infolists\Components\Section;
 use Filament\Tables\Enums\ActionsPosition;
+use Filament\Infolists\Components\Livewire;
 use Filament\Infolists\Components\TextEntry;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
+use Cheesegrits\FilamentGoogleMaps\Fields\Map;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportAction;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\Pages;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use App\Filament\MOJO\Resources\OnlineJobOrderResource\RelationManagers;
-use App\Livewire\JobOrderHistory;
-use Filament\Infolists\Components\Livewire;
 
 class OnlineJobOrderResource extends Resource
 {
@@ -223,25 +225,25 @@ class OnlineJobOrderResource extends Resource
             ])
             // ->recordAction(Tables\Actions\ViewAction::class)
             ->columns([
+
                 Tables\Columns\TextColumn::make('jo_number')
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('date_requested')
                     ->dateTime('F d, Y')
                     ->toggleable(),
-                IconColumn::make('account.latitude')
+                IconColumn::make('lat')
                     ->label('Map View')
                     ->icon('fas-map-marked-alt')
                     ->color('info')
                     ->size(IconColumn\IconColumnSize::Large)
                     ->url(function ($record) {
-                        if (!$record || !$record->account || !$record->account->latitude || !$record->account->longtitude) {
+                        if (!$record || !$record->lat || !$record->lng ) {
                             return null;
                         }
-
                         return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
-                            $record->account->latitude . ',' . $record->account->longtitude .
-                            '/@' . $record->account->latitude . ',' . $record->account->longtitude . ',20z';
+                            $record->lat . ',' . $record->lng .
+                            '/@' . $record->lat . ',' . $record->lng . ',20z';
                     }, shouldOpenInNewTab: true)
                     ->tooltip('Go to map view')
                     ->alignCenter(),
@@ -361,6 +363,56 @@ class OnlineJobOrderResource extends Resource
                 }),
             ])
             ->actions([
+
+                Tables\Actions\Action::make('tag')
+                ->label('')
+                ->icon('fas-map-marker-alt')
+                ->tooltip('Set Location')
+                ->color('info')
+                ->size('xl')
+                ->modalWidth(MaxWidth::FiveExtraLarge)
+                ->visible(fn ($record) =>
+                    is_null($record->lat) && is_null($record->lng)
+                )
+                ->form([
+                    // Map::make('location')
+                    //     ->defaultLocation(fn ($record) => [17.6223543, 121.7214678])
+                    //     ->defaultZoom(17)
+                    //     ->live()
+                    //     ->reactive()
+                    //     ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                    //         $set('lat', $state['lat']);
+                    //         $set('lng', $state['lng']);
+                    //     }),
+                    Map::make('location')
+                    ->defaultLocation(fn () => [17.6223543, 121.7214678])
+                    ->defaultZoom(17)
+                    ->live()
+                    ->reactive()
+                    ->extraAttributes([
+                        'x-init' => 'initLocationPicker($wire)',
+                    ])
+                    ->afterStateUpdated(function ($state, callable $get, callable $set) {
+                        $set('lat', $state['lat']);
+                        $set('lng', $state['lng']);
+                    }),
+                    Forms\Components\Hidden::make('lat'),
+                    Forms\Components\Hidden::make('lng'),
+                    ])
+                ->action(function (array $data, $record) {
+                    $record->update([
+                        'lat' => $data['lat'],
+                        'lng' => $data['lng'],
+                    ]);
+
+                    \Filament\Notifications\Notification::make()
+                        ->title('Successfully set location of Job Order')
+                        ->success()
+                        ->send();
+                })
+                ->modalHeading('Set Location of Job Order')
+                ->requiresConfirmation(),
+
                 Action::make('jo_details')
                 ->label('')
                 ->tooltip('View Job Order')

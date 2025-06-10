@@ -85,12 +85,14 @@
                                 marker.bindPopup(`
                                     <b>JO No.:</b> ${data.jo_number}<br>
                                     <b>Date Requested:</b> ${data.date_requested}<br>
+                                    <b>Requested By:</b> ${data.requested_by}<br>
                                     <b>Account Number:</b> ${data.account_number}<br>
                                     <b>Registered Name:</b> ${data.registered_name}<br>
                                     <b>Address:</b> ${data.address}<br>
                                     <b>Type:</b> ${data.jobOrderCode?.description ?? 'N/A'}<br>
                                     <b>Division Concerned:</b> ${data.jobOrderCode?.division?.name ?? 'N/A'}<br>
                                     <b>Status:</b> ${data.status}<br>
+                                    <b>-------------------</b><br>
                                     <b>Total Job Orders:</b> ${data.total ?? 1}<br>
                                     <b>Previous Job Orders:</b> ${previous}
                                 `).openPopup();
