@@ -237,13 +237,14 @@ class OnlineJobOrderResource extends Resource
                     ->icon('fas-map-marked-alt')
                     ->color('info')
                     ->size(IconColumn\IconColumnSize::Large)
+                    ->disabled(fn ($record) => !$record->lat || !$record->lng)
                     ->url(function ($record) {
                         if (!$record || !$record->lat || !$record->lng ) {
                             return null;
                         }
                         return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
-                            $record->lat . ',' . $record->lng .
-                            '/@' . $record->lat . ',' . $record->lng . ',20z';
+                            $record->lat ?? 17.6223543  . ',' . $record->lng ?? 121.7214678 .
+                            '/@' . $record->lat ?? 17.6223543 . ',' . $record->lng ?? 121.7214678 . ',20z';
                     }, shouldOpenInNewTab: true)
                     ->tooltip('Go to map view')
                     ->alignCenter(),
