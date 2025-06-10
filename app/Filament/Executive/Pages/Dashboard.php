@@ -25,23 +25,20 @@ class Dashboard extends \Filament\Pages\Dashboard
             ->whereNotIn('status', ['Accomplished', 'For Verification', 'Verified'])
             ->get()
             ->map(function ($order) {
-                // if($order->account_number){
-                //     $total = OnlineJobOrder::where('account_number', $order->account_number)->count();
-                // }
                 $total = 1;
-        $previousDescriptions = [];
+                $previousDescriptions = [];
 
                 if ($order->account_number) {
                     $allOrders = OnlineJobOrder::where('account_number', $order->account_number)
                         ->with('jobOrderCode')
-                        ->where('id', '!=', $order->id) // exclude current
+                        ->where('id', '!=', $order->id)
                         ->get();
 
                     $total = $allOrders->count() + 1;
 
                     $previousDescriptions = $allOrders
                         ->pluck('jobOrderCode.description')
-                        ->filter() // remove nulls
+                        ->filter()
                         ->unique()
                         ->values()
                         ->toArray();

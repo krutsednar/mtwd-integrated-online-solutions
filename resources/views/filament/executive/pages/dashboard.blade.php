@@ -53,22 +53,6 @@
 
         const jobOrders = @json($jobOrders);
 
-        // jobOrders.forEach(order => {
-        //     if (order.lat && order.lng) {
-        //         let marker = L.marker([order.lat, order.lng], {icon: joIcon})
-        //             .bindPopup(`<b>JO No.: ${order.jo_number}</b>
-        //             <br>Date Requested: ${order.date_requested}
-        //             <br>Account Number: ${order.account_number}
-        //             <br>Registered Name: ${order.registered_name}
-        //             <br>Type: ${order.jobOrderCode?.description ?? 'N/A'}
-        //             <br>Division Concerned: ${order.jobOrderCode?.division?.name ?? 'N/A'}
-        //             <br>Status: ${order.status}
-        //             <br>Total JOs: ${order.total}
-        //             `)
-        //             .addTo(map);
-        //         markers.push(marker);
-        //     }
-        // });
         jobOrders.forEach(order => {
             if (order.lat && order.lng) {
                 const previous = order.previous_descriptions?.length
