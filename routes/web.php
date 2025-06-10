@@ -46,6 +46,7 @@ Route::get('/executive/job-order/{id}', function ($id) {
         'lng' => $order->lng,
         'date_requested' => Carbon::parse($order->date_requested)->format('F d, Y'),
         'jo_number' => $order->jo_number,
+        'requested_by' => $order->requested_by,
         'meter_number' => $order->meter_number,
         'registered_name' => $order->registered_name,
         'address' => $order->address,

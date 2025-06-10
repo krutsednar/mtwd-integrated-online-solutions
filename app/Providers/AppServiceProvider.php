@@ -14,6 +14,7 @@ use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentView;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
+use Illuminate\Contracts\View\View;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -89,6 +90,11 @@ class AppServiceProvider extends ServiceProvider
             ),
         );
 
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SCRIPTS_AFTER,
+            // fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
+            fn (): View => view('filament.scripts.geolocation'),
+        );
         FilamentView::registerRenderHook(
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
             fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
