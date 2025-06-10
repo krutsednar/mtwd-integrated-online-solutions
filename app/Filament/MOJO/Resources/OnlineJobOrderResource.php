@@ -241,7 +241,6 @@ class OnlineJobOrderResource extends Resource
                         if (!$record || !$record->lat || !$record->lng ) {
                             return null;
                         }
-
                         return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
                             $record->lat . ',' . $record->lng .
                             '/@' . $record->lat . ',' . $record->lng . ',20z';
