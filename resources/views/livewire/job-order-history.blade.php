@@ -39,7 +39,7 @@
                      {{ \Carbon\Carbon::parse($this->record->date_accomplished)->format('F d, Y H:i:s') }}
                 </th>
                 <td class="px-6 py-4">
-                   Job Order was accomplished by {{ $this->user->where('jo_id', $record->dispatched_by)->value('first_name').' '.$this->user->where('jo_id', $record->dispatched_by)->value('last_name') }} and was assigned to {{ implode(', ', $this->user->whereIn('jo_id', \App\Models\JoAccomplishment::where('jo_number', $record->jo_number)->pluck('jo_user'))->get()->pluck('full_name')->toArray()) }}
+                   Job Order was accomplished by {{ $this->user->where('jo_id', $record->dispatched_by)->value('first_name').' '.$this->user->where('jo_id', $record->dispatched_by)->value('last_name') }} and was assigned to {{ implode(', ', $this->user->whereIn('employee_number', \App\Models\JoAccomplishment::where('jo_number', $record->jo_number)->pluck('jo_user'))->get()->pluck('full_name')->toArray()) }}
 
                 </td>
             </tr>
@@ -50,7 +50,7 @@
                      {{ \Carbon\Carbon::parse($this->record->date_dispatched)->format('F d, Y H:i:s') }}
                 </th>
                 <td class="px-6 py-4">
-                   Job Order was dispatched by {{ $this->user->where('jo_id', $record->dispatched_by)->value('first_name').' '.$this->user->where('jo_id', $record->dispatched_by)->value('last_name') }} and was assigned to {{ implode(', ', $this->user->whereIn('jo_id', \App\Models\JoDispatch::where('jo_number', $record->jo_number)->pluck('jo_user'))->get()->pluck('full_name')->toArray()) }}
+                   Job Order was dispatched by {{ $this->user->where('jo_id', $record->dispatched_by)->value('first_name').' '.$this->user->where('jo_id', $record->dispatched_by)->value('last_name') }} and was assigned to {{ implode(', ', $this->user->whereIn('employee_number', \App\Models\JoDispatch::where('jo_number', $record->jo_number)->pluck('jo_user'))->get()->pluck('full_name')->toArray()) }}
 
                 </td>
             </tr>

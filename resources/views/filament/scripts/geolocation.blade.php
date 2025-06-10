@@ -1,6 +1,6 @@
-<div>
-    <script>
-        function initLocationPicker($wire) {
+<script>
+    function initLocationPicker($wire) {
+        document.addEventListener("livewire:load", () => {
             if (!navigator.geolocation) {
                 console.warn("Geolocation is not supported.");
                 return;
@@ -11,14 +11,15 @@
                     const lat = position.coords.latitude;
                     const lng = position.coords.longitude;
 
-                    $wire.set('data.location', { lat: lat, lng: lng });
-                    $wire.set('data.lat', lat);
-                    $wire.set('data.lng', lng);
+                    // Update this based on your actual form field structure
+                    $wire.set('location', { lat, lng });
+                    $wire.set('lat', lat);
+                    $wire.set('lng', lng);
                 },
                 (error) => {
                     console.error("Geolocation error:", error);
                 }
             );
-        }
-    </script>
-</div>
+        });
+    }
+</script>
