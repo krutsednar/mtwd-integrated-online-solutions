@@ -243,13 +243,13 @@ class OnlineJobOrderResource extends Resource
                             return null;
                         }
                         return 'https://www.google.com/maps/dir/17.6223543,121.7214678/' .
-                            $record->lat ?? 17.6223543  . ',' . $record->lng ?? 121.7214678 .
-                            '/@' . $record->lat ?? 17.6223543 . ',' . $record->lng ?? 121.7214678 . ',20z';
+                            $record->lat  . ',' . $record->lng .
+                            '/@' . $record->lat . ',' . $record->lng . ',20z';
                     }, shouldOpenInNewTab: true)
                     ->tooltip('Go to map view')
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('account_number')
-                    ->description(fn (OnlineJobOrder $record): string => $record->registered_name, position: 'below')
+                    ->description(fn (OnlineJobOrder $record): string => $record->registered_name ?? 'No Record', position: 'below')
                     ->searchable()
                     ->wrap(),
                 Tables\Columns\TextColumn::make('jocode.description')
