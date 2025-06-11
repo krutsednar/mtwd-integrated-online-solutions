@@ -7,6 +7,7 @@ use Auth;
 use Filament\Facades\Filament;
 use App\Filament\Pages\Profile;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Redirect;
 use Livewire\Features\SupportRedirects\Redirector;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
 
@@ -19,12 +20,10 @@ class LoginResponse implements LoginResponseContract
 
         if (blank($user->name) OR blank($user->division_id) OR is_null($user->name) OR is_null($user->division_id)) {
             return redirect(Profile::getUrl());
+        } elseif( auth()->user()->hasRole('Executive')) {
+            return Redirect::to('/executive');
         } else {
             return redirect()->intended(Filament::getUrl());
         }
-
-
-        // Here, you can define which resource and which page you want to redirect to
-        // return redirect()->to(OrderResource::getUrl('index'));
     }
 }
