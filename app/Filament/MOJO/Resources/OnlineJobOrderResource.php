@@ -385,10 +385,10 @@ class OnlineJobOrderResource extends Resource
                     ->live()
                     ->reactive()
                     ->extraAttributes([
-                        'x-init' => <<<JS
+                        'x-init' => <<<'JS'
                             if (navigator.geolocation) {
                                 navigator.geolocation.getCurrentPosition(function(position) {
-                                    $wire.set('data.location', {
+                                    $wire.set('location', {
                                         lat: position.coords.latitude,
                                         lng: position.coords.longitude
                                     });
@@ -396,9 +396,7 @@ class OnlineJobOrderResource extends Resource
                             }
                         JS,
                     ])
-                    // ->extraAttributes([
-                    //     'x-init' => 'initLocationPicker($wire)',
-                    // ])
+
                     ->afterStateUpdated(function ($state, callable $get, callable $set) {
                         $set('lat', $state['lat']);
                         $set('lng', $state['lng']);

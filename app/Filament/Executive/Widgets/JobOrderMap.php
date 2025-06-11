@@ -312,11 +312,25 @@ class JobOrderMap extends MapTableWidget
 			->modalSubmitAction(false);
 	}
 
+    // protected function getTableRecordsPerPageSelectOptions(): array
+    // {
+    //     return [5000, 500, 50];
+    // }
+
     protected function getTableRecordsPerPageSelectOptions(): array
     {
-        return [25, 50, 100];
+        return [5000];
     }
 
+    // protected function getTableRecordsPerPage(): int
+    // {
+    //     return -1;
+    // }
+
+    protected function isTablePaginationEnabled(): bool
+    {
+        return false;
+    }
     protected function getScripts(): array
     {
         return [

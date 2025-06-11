@@ -28,9 +28,6 @@ class JobOrderStatistics extends Page
             JobOrderPerDivision::class,
             JobOrderPerCategory::class,
             JobOrderPerType::class,
-            // JobOrderPerZoneChart::class,
-            // JoPerMonth::class,
-            // JoSummaryChart::class,
         ];
     }
 }

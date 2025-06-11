@@ -5,16 +5,17 @@ namespace App\Providers;
 use Filament\Facades\Filament;
 use App\Filament\Pages\Profile;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\URL;
 use App\Http\Responses\LoginResponse;
 use Illuminate\Support\Facades\Blade;
 use App\Http\Responses\LogoutResponse;
 use Illuminate\Support\ServiceProvider;
+use Filament\Notifications\Notification;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentView;
-use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
-use Illuminate\Contracts\View\View;
+use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,6 +34,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+
         if (config('app.env') === 'production') {
             URL::forceScheme('https');
         }
@@ -103,5 +106,11 @@ class AppServiceProvider extends ServiceProvider
             PanelsRenderHook::SIDEBAR_FOOTER,
             fn (): string => Blade::render('@livewire(\'buttons.logout\')'),
         );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::BODY_END,
+            fn (): string => Blade::render('@livewire(\'accomplished-modal\')'),
+        );
+
     }
 }
