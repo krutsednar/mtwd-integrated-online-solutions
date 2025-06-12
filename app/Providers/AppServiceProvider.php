@@ -107,10 +107,5 @@ class AppServiceProvider extends ServiceProvider
             fn (): string => Blade::render('@livewire(\'buttons.logout\')'),
         );
 
-        FilamentView::registerRenderHook(
-            PanelsRenderHook::BODY_END,
-            fn (): string => Blade::render('@livewire(\'accomplished-modal\')'),
-        );
-
     }
 }
