@@ -583,6 +583,9 @@ class OnlineJobOrderResource extends Resource
                             return auth()->user()->jo_id; // Store only the user ID
                         })
                         ->readOnly(),
+                        Forms\Components\TextInput::make('is_synced')
+                            ->default(0)
+                            ->hidden(),
 
                     Forms\Components\Select::make('status')
                         ->options([
@@ -614,6 +617,7 @@ class OnlineJobOrderResource extends Resource
                             'date_forwarded' => now(),
                             'status' => 'Forwarded',
                             'forwarded_by' =>auth()->user()->jo_id,
+                            'is_synced' => 0,
                         ]);
 
                         \Filament\Notifications\Notification::make()
@@ -639,6 +643,7 @@ class OnlineJobOrderResource extends Resource
                             'date_received' => now(),
                             'status' => 'For Dispatch',
                             'received_by' =>auth()->user()->jo_id,
+                            'is_synced' => 0,
                         ]);
 
                         \Filament\Notifications\Notification::make()
@@ -737,6 +742,9 @@ class OnlineJobOrderResource extends Resource
                                     ->label('House No./Blk/Unit/Zone/Purok/Street')
                                     ->required(true)
                                     ->disabled(),
+                                    Forms\Components\TextInput::make('is_synced')
+                                    ->default(0)
+                                    ->hidden(),
                                 Forms\Components\Select::make('dispatched')
                                     ->label('Dispatch To')
                                     ->multiple()
@@ -759,6 +767,7 @@ class OnlineJobOrderResource extends Resource
                                         $joNumber = $get('jo_number');
                                         $default = \App\Models\JoDispatch::where('jo_number', $joNumber)->pluck('jo_user')->toArray();
                                         $set('dispatched', $default);
+                                        $set('is_synced', 0);
                                     })
                                     ->searchable()
                                     ->preload()
@@ -785,6 +794,7 @@ class OnlineJobOrderResource extends Resource
                                 'date_dispatched' => now(),
                                 'dispatched_by' => auth()->user()->jo_id,
                                 'status' => 'Dispatched',
+                                'is_synced' => 0,
                         ]);
 
                         // Optional: Show success notification
@@ -811,6 +821,7 @@ class OnlineJobOrderResource extends Resource
                             'date_dispatched' => null,
                             'status' => 'For Dispatch',
                             'dispatched_by' => '',
+                            'is_synced' => 0,
                         ]);
 
                         JoDispatch::where('jo_number', $record->jo_number)->delete();
@@ -892,7 +903,9 @@ class OnlineJobOrderResource extends Resource
                                     'Wrong Complaint/Request' => 'Wrong Complaint/Request',
                                 ])
                                 ->required(),
-
+                                TextInput::make('is_synced')
+                                ->default(0)
+                                ->hidden(),
                                 Forms\Components\TextInput::make('acknowledge_by'),
                                 Forms\Components\Select::make('accomplished')
                                     ->label('Accomplished By')
@@ -916,6 +929,7 @@ class OnlineJobOrderResource extends Resource
                                         $joNumber = $get('jo_number');
                                         $default = \App\Models\JoAccomplishment::where('jo_number', $joNumber)->pluck('jo_user')->toArray();
                                         $set('dispatched', $default);
+                                        $set('is_synced', 0);
                                     })
                                     ->searchable()
                                     ->preload()
@@ -944,6 +958,7 @@ class OnlineJobOrderResource extends Resource
                                 'actions_taken' => $data['actions_taken'] ?? null,
                                 'field_findings' => $data['field_findings'] ?? null,
                                 'acknowledge_by' => $data['acknowledge_by'] ?? null,
+                                'is_synced' => 0,
                         ]);
 
                         // Optional: Show success notification
@@ -974,6 +989,7 @@ class OnlineJobOrderResource extends Resource
                             'actions_taken' => null,
                             'acknowledge_by' => null,
                             'recommendations' => null,
+                            'is_synced' => 0,
                         ]);
 
                         JoAccomplishment::where('jo_number', $record->jo_number)->delete();
@@ -999,6 +1015,7 @@ class OnlineJobOrderResource extends Resource
                         $record->update([
                             'date_returned' => now(),
                             'status' => 'For Verification',
+                            'is_synced' => 0,
                         ]);
 
                         \Filament\Notifications\Notification::make()
@@ -1022,6 +1039,7 @@ class OnlineJobOrderResource extends Resource
                         $record->update([
                             'date_verified' => now(),
                             'status' => 'Verified',
+                            'is_synced' => 0,
                         ]);
 
                         \Filament\Notifications\Notification::make()
