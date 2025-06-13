@@ -28,6 +28,7 @@ class MOCAPanelProvider extends PanelProvider
         return $panel
             ->id('MOCA')
             ->path('MOCA')
+            ->favicon(asset('images/mtwdicon.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
