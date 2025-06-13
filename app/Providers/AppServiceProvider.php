@@ -78,11 +78,6 @@ class AppServiceProvider extends ServiceProvider
             ->modalHeading('MTWD Information Systems');
         });
 
-        // FilamentView::registerRenderHook(
-        //     PanelsRenderHook::SIDEBAR_NAV_START ,
-        //     fn (): string => Blade::render('@livewire(\'panel-title\')'),
-        // );
-
         FilamentView::registerRenderHook(
             PanelsRenderHook::SIDEBAR_NAV_START,
             fn (): string => Blade::render(
