@@ -231,9 +231,6 @@ class OnlineJobOrderResource extends Resource
                 Tables\Columns\TextColumn::make('jo_number')
                     ->searchable()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('date_requested')
-                    ->dateTime('F d, Y')
-                    ->toggleable(),
                 IconColumn::make('lat')
                     ->label('Map View')
                     ->icon('fas-map-marked-alt')
@@ -250,22 +247,25 @@ class OnlineJobOrderResource extends Resource
                     }, shouldOpenInNewTab: true)
                     ->tooltip('Go to map view')
                     ->alignCenter(),
+                Tables\Columns\TextColumn::make('date_requested')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
                 Tables\Columns\TextColumn::make('account_number')
                     ->description(fn (OnlineJobOrder $record): string => $record->registered_name ?? 'No Record', position: 'below')
                     ->searchable()
                     ->wrap(),
                 Tables\Columns\TextColumn::make('jocode.description')
-                ->label('Type')
+                ->label('JO Type')
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('jocode.category.name')
-                ->label('Category')
+                ->label('JO Category')
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('jocode.division.name')
-                ->label('Division')
+                ->label('Division Concerned')
                 ->searchable()
                 ->wrap()
                     ->toggleable(),

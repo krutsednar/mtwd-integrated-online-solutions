@@ -25,9 +25,9 @@ class JobOrderStatistics extends Page
     {
         return [
             JobOrderOverview::class,
-            JobOrderPerDivision::class,
-            JobOrderPerCategory::class,
-            JobOrderPerType::class,
+            // JobOrderPerDivision::class,
+            // JobOrderPerCategory::class,
+            // JobOrderPerType::class,
         ];
     }
 }

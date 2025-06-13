@@ -28,6 +28,7 @@ class PFISPanelProvider extends PanelProvider
         return $panel
             ->id('PFIS')
             ->path('PFIS')
+            ->favicon(asset('images/mtwdicon.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,

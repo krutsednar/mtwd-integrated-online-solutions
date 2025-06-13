@@ -31,6 +31,7 @@ class HomePanelProvider extends PanelProvider
             ->id('home')
             ->path('home')
             ->login(Login::class)
+            ->favicon(asset('images/mtwdicon.png'))
             ->registration(Register::class)
             ->emailVerification()
             ->profile(Profile::class, isSimple: false)
