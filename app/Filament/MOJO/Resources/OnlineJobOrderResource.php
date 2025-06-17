@@ -374,6 +374,7 @@ class OnlineJobOrderResource extends Resource
                 ->color('info')
                 ->size('xl')
                 ->modalWidth(MaxWidth::FiveExtraLarge)
+                ->closeModalByClickingAway(false)
                 ->visible(fn ($record) =>
                     is_null($record->lat) && is_null($record->lng)
                 )
