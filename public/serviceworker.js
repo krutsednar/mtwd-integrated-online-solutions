@@ -1,6 +1,6 @@
 var staticCacheName = "pwa-v" + new Date().getTime();
 var filesToCache = [
-    'https://mios.mtwd-kit.ph/offline',
+    '/offline',
     '/build/assets/app-QknQwDzL.css',
     '/build/assets/app-BJzVHZHd.js',
     '/images/icons/icon-72x72.png',
@@ -15,13 +15,13 @@ var filesToCache = [
 
 // Cache on install
 self.addEventListener("install", event => {
-    self.skipWaiting();
+    this.skipWaiting();
     event.waitUntil(
         caches.open(staticCacheName)
             .then(cache => {
                 return cache.addAll(filesToCache);
             })
-    );
+    )
 });
 
 // Clear cache on activate
@@ -30,8 +30,8 @@ self.addEventListener('activate', event => {
         caches.keys().then(cacheNames => {
             return Promise.all(
                 cacheNames
-                    .filter(cacheName => cacheName.startsWith("pwa-"))
-                    .filter(cacheName => cacheName !== staticCacheName)
+                    .filter(cacheName => (cacheName.startsWith("pwa-")))
+                    .filter(cacheName => (cacheName !== staticCacheName))
                     .map(cacheName => caches.delete(cacheName))
             );
         })
@@ -46,7 +46,7 @@ self.addEventListener("fetch", event => {
                 return response || fetch(event.request);
             })
             .catch(() => {
-                return caches.match('https://mios.mtwd-kit.ph/offline');
+                return caches.match('offline');
             })
-    );
+    )
 });
