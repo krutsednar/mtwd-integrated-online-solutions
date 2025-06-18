@@ -51,7 +51,6 @@ class HomePanelProvider extends PanelProvider
                 Widgets\AccountWidget::class,
 
             ])
-             ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
