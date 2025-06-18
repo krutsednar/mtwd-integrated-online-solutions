@@ -60,6 +60,7 @@ class HomePanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
             ])
+            ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
             ->authMiddleware([
                 Authenticate::class,
             ])
