@@ -9,6 +9,8 @@ use Filament\PanelProvider;
 use App\Filament\Pages\Profile;
 use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Home\Pages\Auth\Register;
 use Filament\Http\Middleware\Authenticate;
@@ -72,6 +74,12 @@ class HomePanelProvider extends PanelProvider
                     )
                     ->sort(1),
             ])
-            ->sidebarCollapsibleOnDesktop();
+            ->sidebarCollapsibleOnDesktop()
+            ->renderHook(
+                PanelsRenderHook::HEAD_END,
+                function (): string {
+                    return Blade::render('@laravelPWA');
+                }
+            );
     }
 }
