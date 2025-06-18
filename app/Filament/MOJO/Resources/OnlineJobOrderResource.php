@@ -67,9 +67,10 @@ class OnlineJobOrderResource extends Resource
                     ->reactive()
                     ->placeholder(
                         fn () =>
-                        Carbon::now()->format('Ym').str_pad(OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                        ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                        ->value('number') + 1, 7, '0', STR_PAD_LEFT)
+
+                        Carbon::now()->format('Ym').str_pad(OnlineJobOrder::orderByDesc('created_at')
+                                ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                ->value('number') + 1, 7, '0', STR_PAD_LEFT)
                         )
                     ,
                 Forms\Components\DateTimePicker::make('date_requested')
@@ -543,15 +544,22 @@ class OnlineJobOrderResource extends Resource
                                 default => 'MOJO',
                             };
 
-                            // $count = \App\Models\OnlineJobOrder::withTrashed()->count() + 1;
-                            $suffix = str_pad(
-                                    (OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                                        ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                                        ->value('number') ?? 0) + 1,
-                                    7,
-                                    '0',
-                                    STR_PAD_LEFT
-                                );
+                            // $suffix = str_pad(
+                            //         (OnlineJobOrder::latest()->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                            //             ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                            //             ->value('number') ?? 0) + 1,
+                            //         7,
+                            //         '0',
+                            //         STR_PAD_LEFT
+                            //     );
+                            // $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
+
+                            $latestNumber = \App\Models\OnlineJobOrder::orderByDesc('created_at')
+                                ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                ->value('number') ?? 0;
+
+                            $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
+
                             $joNumber = $prefix . Carbon::now()->format('Ym') . $suffix;
 
                             $set('jo_number', $joNumber);
