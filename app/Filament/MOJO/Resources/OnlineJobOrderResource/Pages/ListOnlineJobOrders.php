@@ -34,18 +34,26 @@ class ListOnlineJobOrders extends ListRecords
                 $ym = Carbon::now()->format('Ym');
                 $fullPrefix = $prefix . $ym;
 
-                $latestNumber = OnlineJobOrder::latest()
-                    ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                    ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                    ->value('number') ?? 0;
+                $latestNumber = OnlineJobOrder::orderByDesc('created_at')
+                                ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                                ->value('number') ?? 0;
 
-                $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
+                            $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
 
-                $joCode = JobOrderCode::where('code', $data['job_order_code']);
+                            $joNumber = $fullPrefix . $suffix;
 
-                $data['jo_number'] = $fullPrefix . $suffix;
-                // $data['date_forwarded'] = Carbon::now();
-                // $data['forwarded_by'] = auth()->user()->jo_id;
+                // $latestNumber = OnlineJobOrder::latest()
+                //     ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
+                //     ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
+                //     ->value('number') ?? 0;
+
+
+
+                // $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
+
+                // $joCode = JobOrderCode::where('code', $data['job_order_code']);
+
+                $data['jo_number'] = $joNumber;
 
                 return $data;
             })
