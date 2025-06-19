@@ -1,7 +1,5 @@
 <x-filament-panels::page>
     <span class="text-xl"><b>Metropolitan Tuguegarao Water District: </b><i>Sourcing Water, Shaping Lives</i></span>
-
-
     <x-filament::button
         href="https://filamentphp.com"
         id="toggleMarkersBtn"
@@ -9,14 +7,12 @@
     >
         Hide Job Orders
     </x-filament::button>
+    <span class="font-bold text-m">Ongoing JOs: {{ $jobOrders->count() }}</span>
 
     <div id="map" style="height: 90vh;" class="w-full"></div>
 
-    <!-- Leaflet (JS/CSS) -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.6.0/dist/leaflet.css">
     <script src="https://unpkg.com/leaflet@1.6.0/dist/leaflet.js"></script>
-
-    <!-- Leaflet-KMZ -->
     <script src="https://unpkg.com/leaflet-kmz@latest/dist/leaflet-kmz.js"></script>
 
     <script>
@@ -47,7 +43,6 @@
             iconSize: [20, 20],
         });
 
-        // Array to hold all markers
         var markers = [];
 
         const jobOrders = @json($jobOrders);
@@ -57,22 +52,6 @@
                 const previous = order.previous_descriptions?.length
                     ? order.previous_descriptions.join(', ')
                     : 'None';
-
-                // let marker = L.marker([order.lat, order.lng], { icon: joIcon })
-                //     .bindPopup(`
-                //         <b>JO No.: ${order.jo_number}</b>
-                //         <br><b>Date Requested:</b> ${order.date_requested}
-                //         <br><b>Account Number:</b> ${order.account_number}
-                //         <br><b>Registered Name:</b> ${order.registered_name}
-                //         <br><b>Address:</b> ${order.address}
-                //         <br><b>Type:</b> ${order.jobOrderCode?.description ?? 'N/A'}
-                //         <br><b>Division Concerned:</b> ${order.jobOrderCode?.division?.name ?? 'N/A'}
-                //         <br><b>Status:</b> ${order.status}
-                //         <br><b>Total Job Orders:</b> ${order.total ?? 1}
-                //         <br><b>Previous Job Orders:</b> ${previous}
-                //     `)
-                //     .addTo(map);
-
                 let marker = L.marker([order.lat, order.lng], { icon: joIcon })
                     .on('click', function () {
                         fetch(`/executive/job-order/${order.id}`)
@@ -104,6 +83,12 @@
             }
         });
 
+        // Accounts Marker
+        var accountIcon = L.icon({
+            iconUrl: '{{ asset('images/account.svg') }}',
+            iconSize: [20, 20],
+        });
+
         // Toggle button logic
         let markersVisible = true;
         const toggleBtn = document.getElementById('toggleMarkersBtn');
@@ -119,6 +104,7 @@
                 markersVisible = true;
             }
         });
+
     </script>
     <style>
         .leaflet-container {
