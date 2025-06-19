@@ -32,7 +32,7 @@ class MOJOPanelProvider extends PanelProvider
         return $panel
             ->id('MOJO')
             ->path('MOJO')
-            ->favicon(asset('images/mtwdicon.png'))
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,

@@ -28,7 +28,7 @@ class MCISPanelProvider extends PanelProvider
         return $panel
             ->id('MCIS')
             ->path('MCIS')
-            ->favicon(asset('images/mtwdicon.png'))
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,

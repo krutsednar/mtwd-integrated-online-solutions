@@ -29,7 +29,6 @@
         "pxlrbt/filament-excel": "^2.4",
         "rmsramos/activitylog": "^1.0",
         "rupadana/filament-api-service": "^3.4",
-        "silviolleite/laravelpwa": "^2.0",
         "tomatophp/filament-pwa": "^1.0"
     },
     "require-dev": {
