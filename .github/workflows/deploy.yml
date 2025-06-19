@@ -26,6 +26,7 @@ jobs:
 
       - name: 🛠️ Compile Assets (if using Vite)
         run: |
+          npm install --save laravel-echo pusher-js
           npm ci
           npm run build
         # 💡 If your server can't run Node/Vite, commit `public/build` to repo and skip this
