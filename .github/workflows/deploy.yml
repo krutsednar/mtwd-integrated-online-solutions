@@ -73,13 +73,4 @@ jobs:
             #   echo "✅ queue:work is already running."
             # fi
 
-            echo "🔍 Checking if queue:work is already running..."
-            if ! pgrep -f "artisan queue:work.*--queue=messages,default"; then
-              echo "▶️ Starting queue:work..."
-              nohup php artisan queue:work --queue=messages,default --tries=3 --timeout=60 > storage/logs/queue.log 2>&1 </dev/null &
-              sleep 2
-            else
-              echo "✅ queue:work is already running."
-            fi
-
           EOF
