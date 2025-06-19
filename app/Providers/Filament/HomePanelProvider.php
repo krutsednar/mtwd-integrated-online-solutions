@@ -33,7 +33,7 @@ class HomePanelProvider extends PanelProvider
             ->id('home')
             ->path('home')
             ->login(Login::class)
-            ->favicon(asset('images/mtwdicon.png'))
+            ->favicon(asset('images/mios-logo.png'))
             ->registration(Register::class)
             ->emailVerification()
             ->profile(Profile::class, isSimple: false)
@@ -74,12 +74,6 @@ class HomePanelProvider extends PanelProvider
                     )
                     ->sort(1),
             ])
-            ->sidebarCollapsibleOnDesktop()
-            ->renderHook(
-                PanelsRenderHook::HEAD_END,
-                function (): string {
-                    return Blade::render('@laravelPWA');
-                }
-            );
+            ->sidebarCollapsibleOnDesktop();
     }
 }
