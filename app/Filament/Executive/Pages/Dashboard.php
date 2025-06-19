@@ -23,51 +23,12 @@ class Dashboard extends \Filament\Pages\Dashboard
         $this->jobOrders = OnlineJobOrder::select('id', 'lat', 'lng')
         ->whereNotIn('status', ['Accomplished', 'For Verification', 'Verified'])
         ->get();
-            // $this->jobOrders = OnlineJobOrder::with('jobOrderCode.division')
-            // ->whereNotIn('status', ['Accomplished', 'For Verification', 'Verified'])
-            // ->get()
-            // ->map(function ($order) {
-            //     $total = 1;
-            //     $previousDescriptions = [];
 
-            //     if ($order->account_number) {
-            //         $allOrders = OnlineJobOrder::where('account_number', $order->account_number)
-            //             ->with('jobOrderCode')
-            //             ->where('id', '!=', $order->id)
-            //             ->get();
-
-            //         $total = $allOrders->count() + 1;
-
-            //         $previousDescriptions = $allOrders
-            //             ->pluck('jobOrderCode.description')
-            //             ->filter()
-            //             ->unique()
-            //             ->values()
-            //             ->toArray();
-            //     }
-
-            //     return [
-            //         'id' => $order->id,
-            //         'lat' => $order->lat,
-            //         'lng' => $order->lng,
-            //         'date_requested' => Carbon::parse($order->date_requested)->format('F d, Y'),
-            //         'jo_number' => $order->jo_number,
-            //         'meter_number' => $order->meter_number,
-            //         'registered_name' => $order->registered_name,
-            //         'address' => $order->address,
-            //         'status' => $order->status,
-            //         'account_number' => $order->account_number,
-            //         'jobOrderCode' => $order->jobOrderCode,
-            //         'division' => $order->jobOrderCode->division,
-            //         'total' => $total,
-            //         'previous_descriptions' => $previousDescriptions,
-            //     ];
-            // });
     }
 
-    public function getMaxContentWidth(): MaxWidth
-    {
-        return MaxWidth::Full;
-    }
+    // public function getMaxContentWidth(): MaxWidth
+    // {
+    //     return MaxWidth::Full;
+    // }
 
 }

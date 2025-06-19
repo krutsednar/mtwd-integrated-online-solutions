@@ -7,9 +7,9 @@ use Illuminate\Support\Facades\Route;
 // Route::view('/', 'welcome');
 Route::redirect('/', url('home/login'));
 Route::redirect('/login', url('home/login'));
-Route::get('/offline', function () {
-    return view('vendor.laravelpwa.offline');
-});
+// Route::get('/offline', function () {
+//     return view('vendor.laravelpwa.offline');
+// });
 
 Route::view('dashboard', 'dashboard')
     ->middleware(['auth', 'verified'])

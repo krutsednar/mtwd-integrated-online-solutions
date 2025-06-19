@@ -22,7 +22,7 @@ class Account extends Model
         ->logFillable();
     }
 
-    protected $connection = 'kitdb';
+    // protected $connection = 'kitdb';
 
     public $table = 'accounts';
 
@@ -70,6 +70,11 @@ class Account extends Model
     {
         return $this->belongsTo(OnlineJobOrder::class, 'account_number', 'accmasterlist');
 
+    }
+
+    public function jobOrders()
+    {
+        return $this->hasMany(OnlineJobOrder::class, 'account_number', 'accmasterlist');
     }
 
     /**
