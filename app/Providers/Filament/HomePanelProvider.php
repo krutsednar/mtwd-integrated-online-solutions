@@ -35,6 +35,7 @@ class HomePanelProvider extends PanelProvider
             ->login(Login::class)
             ->favicon(asset('images/mios-logo.png'))
             ->registration(Register::class)
+            ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
             ->emailVerification()
             ->profile(Profile::class, isSimple: false)
             ->defaultAvatarProvider(GetAvatarProvider::class)

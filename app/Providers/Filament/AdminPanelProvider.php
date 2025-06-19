@@ -34,7 +34,6 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->favicon(asset('images/mios-logo.png'))
-            ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
