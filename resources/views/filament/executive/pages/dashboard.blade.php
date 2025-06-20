@@ -35,6 +35,7 @@
         // kmz.load('{{ asset('gis/tugue.kmz') }}');
         kmz.load('{{ asset('storage/gis/pipes.kml') }}');
         kmz.load('{{ asset('storage/gis/PS.kmz') }}');
+        kmz.load('{{ asset('storage/gis/WaterMeters.kmz') }}');
 
         var control = L.control.layers(null, null, { collapsed:false }).addTo(map);
 

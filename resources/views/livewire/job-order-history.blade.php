@@ -80,7 +80,7 @@
                      {{ \Carbon\Carbon::parse($this->record->created_at)->format('F d, Y H:i:s') }}
                 </th>
                 <td class="px-6 py-4">
-                    Report was requested by {{ $this->record->requested_by }} and was processed by {{ $this->user->where('jo_id', $record->processed_by)->value('first_name').' '.$this->user->where('jo_id', $record->processed_by)->value('last_name') }}
+                    Report was requested by {{ $this->record->requested_by }} and was processed by {{ $this->user->where('jo_id', $record->processed_by)->value('first_name') ?? $this->user->where('employee_number', $record->processed_by)->value('first_name').' '.$this->user->where('jo_id', $record->processed_by)->value('last_name') ?? $this->user->where('employee_number', $record->processed_by)->value('last_name') }}
                 </td>
             </tr>
         </tbody>

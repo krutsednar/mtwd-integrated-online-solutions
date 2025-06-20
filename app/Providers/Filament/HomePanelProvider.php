@@ -24,6 +24,7 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use TomatoPHP\FilamentPWA\FilamentPWAPlugin;
 
 class HomePanelProvider extends PanelProvider
 {
@@ -35,7 +36,12 @@ class HomePanelProvider extends PanelProvider
             ->login(Login::class)
             ->favicon(asset('images/mios-logo.png'))
             ->registration(Register::class)
-            ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
+            // ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
+            ->plugin(
+                FilamentPWAPlugin::make()->allowPWASettings(auth()->check() && (
+                    auth()->user()->id === 1 || auth()->user()->hasRole('Super Admin')
+                ))
+            )
             ->emailVerification()
             ->profile(Profile::class, isSimple: false)
             ->defaultAvatarProvider(GetAvatarProvider::class)
