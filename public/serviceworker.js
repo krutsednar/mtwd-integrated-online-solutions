@@ -3,6 +3,11 @@ var filesToCache = [
     '/offline',
     '/css/app.css',
     '/js/app.js',
+    "/storage/01JY3JV85FGV0WAVY3P3753P39.png",
+    "/storage/01JY3JV85MWT1MYX0K783590N9.png",
+    "/storage/01JY3JV85QPFR630TSBW9PD9Z8.png",
+    "/storage/01JY3JV85TZYPRMAT27KYGS5W3.png",
+    "/storage/01JY3JV85W4JK5A4KMGA196KSZ.png"
 ];
 
 // Cache on install

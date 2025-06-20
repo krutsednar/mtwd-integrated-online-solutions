@@ -189,9 +189,11 @@ class OnlineJobOrderResource extends Resource
                     ->afterStateHydrated(function ($component) {
                         $component->state(auth()->user()->name);
                     })
-                    ->dehydrateStateUsing(function ($state) {
-                        return auth()->user()->jo_id;
-                    })
+                     ->dehydrateStateUsing(function ($state) {
+                    $user = auth()->user();
+                    $value = $user->jo_id ?? $user->employee_number;
+                    return str_replace('-', '', $value);
+                })
                     ->dehydrated(true),
                 Forms\Components\TextInput::make('status')
                     ->default('For Forward')
@@ -217,6 +219,8 @@ class OnlineJobOrderResource extends Resource
 
                 // Otherwise, filter by the user's division_id
                 return OnlineJobOrder::where('division_concerned', $user->division_id)
+                    ->orWhere('processed_by', auth()->user()->jo_id)
+                    ->orWhere('processed_by', str_replace('-', '', auth()->user()->employee_number))
                     ->with('account')
                     ->orderBy('id', 'desc');
             })
@@ -311,8 +315,14 @@ class OnlineJobOrderResource extends Resource
                 })
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('processed_by')
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return User::where('jo_id', $record->processed_by)->value('first_name').' '.User::where('jo_id', $record->processed_by)->value('last_name') ?? '';
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->processed_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->processed_by, '-', 2, 0))->first();
+                    }
+
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -585,11 +595,16 @@ class OnlineJobOrderResource extends Resource
                     Forms\Components\TextInput::make('processed_by')
                         ->afterStateHydrated(function ($component, OnlineJobOrder $record) {
                             $user = User::where('jo_id', $record->processed_by)->first();
+
+                            if (! $user) {
+                                $user = User::where('employee_number', $record->processed_by)->first();
+                            }
+
                             $displayName = $user ? "{$user->first_name} {$user->last_name}" : 'Unknown User';
                             $component->state($displayName);
                         })
                         ->dehydrateStateUsing(function ($record) {
-                            return auth()->user()->jo_id; // Store only the user ID
+                            return auth()->user()->jo_id ?? str_replace('-', '', auth()->user()->employee_number);
                         })
                         ->readOnly(),
                         Forms\Components\TextInput::make('is_synced')
@@ -625,7 +640,7 @@ class OnlineJobOrderResource extends Resource
                         $record->update([
                             'date_forwarded' => now(),
                             'status' => 'Forwarded',
-                            'forwarded_by' =>auth()->user()->jo_id,
+                            'forwarded_by' =>auth()->user()->jo_id ?? str_replace('-', '', auth()->user()->employee_number),
                             'is_synced' => 0,
                         ]);
 
@@ -651,7 +666,7 @@ class OnlineJobOrderResource extends Resource
                         $record->update([
                             'date_received' => now(),
                             'status' => 'For Dispatch',
-                            'received_by' =>auth()->user()->jo_id,
+                            'received_by' =>auth()->user()->jo_id ?? str_replace('-', '', auth()->user()->employee_number),
                             'is_synced' => 0,
                         ]);
 
@@ -801,7 +816,7 @@ class OnlineJobOrderResource extends Resource
                         \App\Models\OnlineJobOrder::where('jo_number', $data['jo_number'])
                             ->update([
                                 'date_dispatched' => now(),
-                                'dispatched_by' => auth()->user()->jo_id,
+                                'dispatched_by' => auth()->user()->jo_id ?? str_replace('-', '', auth()->user()->employee_number),
                                 'status' => 'Dispatched',
                                 'is_synced' => 0,
                         ]);
@@ -961,7 +976,7 @@ class OnlineJobOrderResource extends Resource
                         \App\Models\OnlineJobOrder::where('jo_number', $data['jo_number'])
                             ->update([
                                 'date_accomplished' => now(),
-                                'accomplishment_processed_by' => auth()->user()->jo_id,
+                                'accomplishment_processed_by' => auth()->user()->jo_id ?? str_replace('-', '', auth()->user()->employee_number),
                                 'status' => 'Accomplished',
                                 'recommendations' => $data['recommendations'],
                                 'actions_taken' => $data['actions_taken'] ?? null,
