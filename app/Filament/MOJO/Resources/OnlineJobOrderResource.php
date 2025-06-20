@@ -269,7 +269,7 @@ class OnlineJobOrderResource extends Resource
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('jocode.division.name')
+                Tables\Columns\TextColumn::make('division.name')
                 ->label('Division Concerned')
                 ->searchable()
                 ->wrap()
@@ -329,11 +329,153 @@ class OnlineJobOrderResource extends Resource
                 ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('status')
+                    ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('forwarded_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->forwarded_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->forwarded_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->forwarded_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+
+                })
+                ->badge()
+                ->color('success')
+                ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('date_forwarded')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('received_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->received_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->received_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->received_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+                })
+                ->badge()
+                ->color('success')
+                ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('date_received')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('dispatched_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->dispatched_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->dispatched_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->dispatched_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+                })
+                ->badge()
+                ->color('success')
+                ->searchable()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('date_dispatched')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('accomplishment_processed_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->accomplishment_processed_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->accomplishment_processed_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->accomplishment_processed_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+                })
+                ->badge()
+                ->color('success')
                 ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('date_accomplished')
                     ->dateTime('F d, Y')
                     ->toggleable(),
+                Tables\Columns\TextColumn::make('actions_taken')
+                    ->searchable()
+                    ->wrap()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('recommendations')
+                    ->searchable()
+                    ->wrap()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('field_findings')
+                    ->searchable()
+                    ->wrap()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('acknowledge_by')
+                    ->label('Acknowledged By')
+                    ->searchable()
+                    ->wrap()
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('pad_received_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->pad_received_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->pad_received_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->pad_received_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+                })
+                ->badge()
+                ->color('success')
+                ->searchable()
+                ->toggleable(),
+                Tables\Columns\TextColumn::make('date_returned')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
+                Tables\Columns\TextColumn::make('verified_by')
+                 ->getStateUsing(function (OnlineJobOrder $record) {
+                    $user = User::where('jo_id', $record->verified_by)->first();
+
+                    if (! $user) {
+                        $user = User::where('employee_number', substr_replace($record->verified_by, '-', 2, 0))->first();
+                    }
+
+                    if($record->verified_by){
+                        return $user ? "{$user->first_name} {$user->last_name}" : '';
+                    } else {
+                        return '';
+                    }
+                })
+                ->badge()
+                ->color('success')
+                ->searchable()
+                ->toggleable(),
+                Tables\Columns\TextColumn::make('date_verified')
+                    ->dateTime('F d, Y')
+                    ->toggleable(),
+
             ])
             ->filters([
                 DateRangeFilter::make('date_requested')
