@@ -211,4 +211,9 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
     {
         return $this->belongsTo(JobOrderCode::class, 'job_order_code', 'code');
     }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class, 'division_concerned', 'code');
+    }
 }
