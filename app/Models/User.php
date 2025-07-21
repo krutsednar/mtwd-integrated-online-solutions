@@ -98,6 +98,10 @@ class User extends Authenticatable implements FilamentUser
             return $this->hasAnyRole(['Super Admin', 'Executive', 'Mojo Admin', 'Mojo User', 'Mojo View', 'Mojo Supervisor', 'panel_user']) && $this->is_approved;
         }
 
+        if ($panel->getId() === 'MCIS') {
+            return $this->hasAnyRole(['Super Admin', 'Executive', 'Mcis Admin']) && $this->is_approved;
+        }
+
         return $this->is_approved;
     }
 
