@@ -25,7 +25,7 @@ class Statement extends Model
     }
 
 
-    protected $connection = 'mcpdb';
+    protected $connection = 'kitdb';
 
     public $table = 'statements';
 
