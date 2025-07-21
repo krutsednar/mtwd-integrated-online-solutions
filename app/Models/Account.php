@@ -26,24 +26,6 @@ class Account extends Model
 
     public $table = 'accounts';
 
-    public $orderable = [
-        'id',
-        'accmasterlist',
-        'mastername',
-        'mobile',
-        'latitude',
-        'longtitude',
-    ];
-
-    public $filterable = [
-        'id',
-        'accmasterlist',
-        'mastername',
-        'mobile',
-        'latitude',
-        'longtitude',
-    ];
-
     protected $fillable = [
         'accmasterlist',
         'mastername',

@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Filament\Admin\Resources\UserResource\RelationManagers;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -101,14 +102,28 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            // ->headerActions([
-            //     // ImportAction::make()
-            //     //     ->importer(UserImporter::class)
-            //      ExcelImportAction::make()
-            //     ->slideOver()
-            //     ->color("primary")
-            //     ->use(UserImporter::class),
-            // ])
+            ->headerActions([
+                Tables\Actions\Action::make('attachRole')
+                ->badge()
+                ->label('Attach User Role')
+                // ->icon()
+                ->action(function () {
+                    $role = Role::where('name', 'panel_user')->first();
+
+                    // if (! $role) {
+                    //     filament()->notify('danger', 'Role "panel_user" does not exist.');
+                    //     return;
+                    // }
+
+                    // Get all users who don't already have the "panel_user" role
+                    User::whereDoesntHave('roles', function ($query) use ($role) {
+                        $query->where('name', $role->name);
+                    })->get()->each(function ($user) use ($role) {
+                        $user->assignRole($role);
+                    });
+
+                }),
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('employee_number')
                     ->searchable(),

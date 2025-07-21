@@ -35,7 +35,7 @@ class HomePanelProvider extends PanelProvider
             ->path('home')
             ->login(Login::class)
             ->favicon(asset('images/mios-logo.png'))
-            ->registration(Register::class)
+            // ->registration(Register::class)
             // ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
             ->plugin(
                 FilamentPWAPlugin::make()->allowPWASettings(auth()->check() && (

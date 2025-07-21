@@ -210,17 +210,18 @@ class OnlineJobOrderResource extends Resource
             ->query(function () {
                 $user = auth()->user();
 
-                // Check if the user's division_id is 1, 2, or 3
                 if (in_array($user->division_id, [2022, 2023, 7, 2, 3, 4, 5])) {
                     return OnlineJobOrder::query()
                         ->with('account')
                         ->orderBy('id', 'desc');
                 }
 
-                // Otherwise, filter by the user's division_id
-                return OnlineJobOrder::where('division_concerned', $user->division_id)
-                    ->orWhere('processed_by', auth()->user()->jo_id)
-                    ->orWhere('processed_by', str_replace('-', '', auth()->user()->employee_number))
+                return OnlineJobOrder::query()
+                    ->whereHas('jocode.division', function ($query) use ($user) {
+                        $query->where('code', $user->division_id);
+                    })
+                    ->orWhere('processed_by', $user->jo_id)
+                    ->orWhere('processed_by', str_replace('-', '', $user->employee_number))
                     ->with('account')
                     ->orderBy('id', 'desc');
             })
@@ -269,7 +270,7 @@ class OnlineJobOrderResource extends Resource
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('division.name')
+                Tables\Columns\TextColumn::make('jocode.division.name')
                 ->label('Division Concerned')
                 ->searchable()
                 ->wrap()
@@ -776,6 +777,8 @@ class OnlineJobOrderResource extends Resource
                     ->color('warning')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
+
                         $record->status === 'For Forward' && is_null($record->date_forwarded)
                     )
                     ->action(function ($record) {
@@ -802,6 +805,7 @@ class OnlineJobOrderResource extends Resource
                     ->color('warning')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'Forwarded' && !is_null($record->date_forwarded) && is_null($record->date_received)
                     )
                     ->action(function ($record) {
@@ -826,6 +830,7 @@ class OnlineJobOrderResource extends Resource
                     ->modalHeading('Dispatch Job Order')
                     ->modalDescription('Fill out the form to dispatch a job order.')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'For Dispatch' && !is_null($record->date_received) && is_null($record->date_dispatched)
                     )
                     ->form([
@@ -980,6 +985,7 @@ class OnlineJobOrderResource extends Resource
                     ->color('danger')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'Dispatched' && !is_null($record->date_dispatched) && is_null($record->date_accomplished)
                     )
                     ->action(function ($record) {
@@ -1007,6 +1013,7 @@ class OnlineJobOrderResource extends Resource
                     ->modalHeading('Accomplish Job Order')
                     ->modalDescription('Fill out the form to accomplish a job order.')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'Dispatched' && !is_null($record->date_dispatched) && is_null($record->date_accomplished)
                     )
                     ->form([
@@ -1144,6 +1151,7 @@ class OnlineJobOrderResource extends Resource
                     ->color('danger')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'Accomplished' && !is_null($record->date_accomplished) && is_null($record->date_returned)
                     )
                     ->action(function ($record) {
@@ -1175,6 +1183,7 @@ class OnlineJobOrderResource extends Resource
                     ->color('info')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'Accomplished' && !is_null($record->date_accomplished) && is_null($record->date_returned)
                     )
                     ->action(function ($record) {
@@ -1199,6 +1208,7 @@ class OnlineJobOrderResource extends Resource
                     ->color('success')
                     ->size('xl')
                     ->visible(fn ($record) =>
+                        auth()->user()->hasAnyRole(['Mojo User', 'Executive', 'Mojo Admin', 'Super Admin']) &&
                         $record->status === 'For Verification' && !is_null($record->date_returned) && is_null($record->date_verified)
                     )
                     ->action(function ($record) {
