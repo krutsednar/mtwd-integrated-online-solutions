@@ -72,17 +72,17 @@ class SmsBlastChart extends ApexChartWidget
                 [
                     'name' => 'SMS Blast Sent',
                     'data' => $blast->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
-                    'type' => 'bar',
-                    'backgroundColor' => '#deb750',
-                    'borderColor' => '#1061E7',
+                    'type' => 'area',
+                    // 'backgroundColor' => '#deb750',
+                    // 'borderColor' => '#1061E7',
                 ],
 
                 [
                     'name' => 'OTP Sent',
                     'data' => $otp->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
-                    'type' => 'bar',
-                    'backgroundColor' => '#deb750',
-                    'borderColor' => '#1061E7',
+                    'type' => 'area',
+                    // 'backgroundColor' => '#deb750',
+                    // 'borderColor' => '#1061E7',
                 ],
 
             ],
@@ -94,7 +94,7 @@ class SmsBlastChart extends ApexChartWidget
                     ],
                 ],
             ],
-            'colors' => ['#0b0d95', '#0E1CF4',],
+            'colors' => ['#0b0d95', '#e3ac0d',],
             'stroke' => [
                 'curve' => 'smooth',
             ],
