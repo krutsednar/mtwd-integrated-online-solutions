@@ -85,25 +85,25 @@ class DailyChart extends ApexChartWidget
                 [
                     'name' => 'SMS Blast Sent',
                     'data' => $blast->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
-                    'type' => 'bar',
-                    'backgroundColor' => '#deb750',
-                    'borderColor' => '#1061E7',
+                    'type' => 'area',
+                    // 'backgroundColor' => '#deb750',
+                    // 'borderColor' => '#1061E7',
                 ],
 
                 [
                     'name' => 'OTP Sent',
                     'data' => $otp->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
-                    'type' => 'bar',
-                    'backgroundColor' => '#deb750',
-                    'borderColor' => '#1061E7',
+                    'type' => 'area',
+                    // 'backgroundColor' => '#deb750',
+                    // 'borderColor' => '#1061E7',
                 ],
 
                 [
                     'name' => 'SOA',
                     'data' => $statement->map(fn (TrendValue $value) => $value->aggregate)->toArray(),
                     'type' => 'area',
-                    'backgroundColor' => '#deb750',
-                    'borderColor' => '#1061E7',
+                    // 'backgroundColor' => '#18aa1a',
+                    // 'borderColor' => '#18aa1a',
                 ],
 
             ],
@@ -115,7 +115,7 @@ class DailyChart extends ApexChartWidget
                     ],
                 ],
             ],
-            'colors' => ['#0b0d95', '#0E1CF4',],
+            'colors' => ['#0b0d95', '#e3ac0d','#18aa1a'],
             'stroke' => [
                 'curve' => 'smooth',
             ],
