@@ -53,7 +53,7 @@ class SmsReportResource extends Resource
                     ->orderBy('created_at', 'desc')
                     ->where(function ($query) {
                         $query->whereNotNull('account_number')
-                            ->where('account_number', '!=', '');
+                            ->orWhere('account_number', '!=', '');
                     });
             })
             ->columns([
