@@ -50,7 +50,11 @@ class SmsReportResource extends Resource
         return $table
             ->query(function () {
                 return SmsReport::query()
-                    ->orderBy('created_at', 'desc');
+                    ->orderBy('created_at', 'desc')
+                    ->where(function ($query) {
+                        $query->whereNotNull('account_number')
+                            ->where('account_number', '!=', '');
+                    });
             })
             ->columns([
                 Tables\Columns\TextColumn::make('account_number')
@@ -58,7 +62,8 @@ class SmsReportResource extends Resource
                 Tables\Columns\TextColumn::make('mobile')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('amount_before_due')
-                    ->searchable(),
+                    ->searchable()
+                    ->money('PHP'),
                 Tables\Columns\TextColumn::make('due_date')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
