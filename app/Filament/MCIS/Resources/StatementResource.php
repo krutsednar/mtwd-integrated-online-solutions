@@ -96,6 +96,10 @@ class StatementResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                return Statement::query()
+                    ->orderBy('updated_at', 'desc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('account_number')
                     ->searchable(),
@@ -106,59 +110,65 @@ class StatementResource extends Resource
                 Tables\Columns\TextColumn::make('classification')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('reading_date')
-                    ->date()
+                    ->date('F d, Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('due_date')
-                    ->date()
+                    ->date('F d, Y')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('previous_reading_cum')
+                    ->label('Previous Reading')
                     ->numeric()
+                    ->suffix(' m³')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('present_reading_cum')
+                    ->label('Present Reading')
                     ->numeric()
+                    ->suffix(' m³')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('consumption_cum')
+                    ->label('Consumption')
                     ->numeric()
+                    ->suffix(' m³')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('current_bill')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('maintenance_fee')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('franchise_tax')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('arrears')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('other_charges')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('advance_payment')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('senior_citizen_discount')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_before_due_date')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('penalty')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('amount_after_due_date')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
-                Tables\Columns\TextColumn::make('status')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('status')
+                //     ->searchable(),
                 Tables\Columns\TextColumn::make('months_in_arrears')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('paid')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('transmitted')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('paid')
+                //     ->searchable(),
+                // Tables\Columns\TextColumn::make('transmitted')
+                //     ->searchable(),
                 // Tables\Columns\TextColumn::make('created_at')
                 //     ->dateTime()
                 //     ->sortable()

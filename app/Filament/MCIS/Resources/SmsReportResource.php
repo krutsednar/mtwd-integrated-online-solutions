@@ -48,6 +48,10 @@ class SmsReportResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                return SmsReport::query()
+                    ->orderBy('created_at', 'desc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('account_number')
                     ->searchable(),

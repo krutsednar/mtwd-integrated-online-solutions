@@ -61,6 +61,10 @@ class UserPaymentResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->query(function () {
+                return UserPayment::query()
+                    ->orderBy('created_at', 'desc');
+            })
             ->columns([
                 Tables\Columns\TextColumn::make('AccountNumber')
                     ->searchable(),
@@ -69,9 +73,10 @@ class UserPaymentResource extends Resource
                 Tables\Columns\TextColumn::make('MerchantRefNo')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('Particulars')
-                    ->searchable(),
+                    ->searchable()
+                    ->wrap(),
                 Tables\Columns\TextColumn::make('Amount')
-                    ->numeric()
+                    ->money('PHP')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('PayorName')
                     ->searchable(),
@@ -87,14 +92,14 @@ class UserPaymentResource extends Resource
                         // 'rejected' => 'danger',
                     }),
                 Tables\Columns\TextColumn::make('EppRefNo')
-                    ->numeric()
+                    // ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('PaymentOption')
                     ->searchable(),
-                // Tables\Columns\TextColumn::make('created_at')
-                //     ->dateTime()
-                //     ->sortable()
-                //     ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 // Tables\Columns\TextColumn::make('updated_at')
                 //     ->dateTime()
                 //     ->sortable()
