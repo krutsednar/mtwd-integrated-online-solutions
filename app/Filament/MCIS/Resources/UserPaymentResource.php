@@ -65,8 +65,8 @@ class UserPaymentResource extends Resource
                 return UserPayment::query()
                     ->orderBy('created_at', 'desc')
                     ->where(function ($query) {
-                        $query->whereNotNull('account_number')
-                            ->orWhere('account_number', '!=', '');
+                        $query->whereNotNull('AccountNumber')
+                            ->orWhere('AccountNumber', '!=', '');
                     });
             })
             ->columns([
