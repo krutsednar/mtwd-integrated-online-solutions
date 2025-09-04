@@ -97,7 +97,8 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
             $advancepayment = $row['arrears'];
             $penalty = 0;
             $beforedue = 0;
-            $afterdue = 0;
+            // $afterdue = 0;
+            $afterdue = $row['billamount'] + $mf + $ft + $row['othercharges'] - abs($scd) - abs($advancepayment) + $penalty;
         }
 
         //penalty

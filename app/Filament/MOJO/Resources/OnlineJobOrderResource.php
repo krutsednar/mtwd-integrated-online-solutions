@@ -62,6 +62,7 @@ class OnlineJobOrderResource extends Resource
 
                 Forms\Components\TextInput::make('jo_number')
                     ->label('JO Number')
+                    ->unique()
                     ->required()
                     ->readOnly()
                     ->reactive()
