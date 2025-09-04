@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('online_job_orders', static function (Blueprint $table) {
             $table->id();
-            $table->string('jo_number');
+            $table->string('jo_number')->unique();
             $table->datetime('date_requested');
             $table->string('account_number');
             $table->string('registered_name');
