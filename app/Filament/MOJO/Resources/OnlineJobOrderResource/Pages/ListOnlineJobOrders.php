@@ -42,17 +42,6 @@ class ListOnlineJobOrders extends ListRecords
 
                             $joNumber = $fullPrefix . $suffix;
 
-                // $latestNumber = OnlineJobOrder::latest()
-                //     ->selectRaw("CAST(RIGHT(jo_number, 7) AS UNSIGNED) as number")
-                //     ->orderByDesc(DB::raw("CAST(RIGHT(jo_number, 7) AS UNSIGNED)"))
-                //     ->value('number') ?? 0;
-
-
-
-                // $suffix = str_pad($latestNumber + 1, 7, '0', STR_PAD_LEFT);
-
-                // $joCode = JobOrderCode::where('code', $data['job_order_code']);
-
                 $data['jo_number'] = $joNumber;
 
                 return $data;
