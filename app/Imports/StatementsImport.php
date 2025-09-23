@@ -132,8 +132,6 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
                 ]);
                 DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=1;');
 
-                // $accounts = Account::where('accmasterlist', $row['accountno'])->get();
-
                 $abd = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
 
                 if((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] <= 0))
