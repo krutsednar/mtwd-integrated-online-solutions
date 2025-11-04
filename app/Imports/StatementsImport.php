@@ -35,43 +35,27 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
     */
     public function model(array $row)
     {
-        //classification
-        $class = $row['consumertype'];
-        if ($class = 1){
-            $classification = 'RESIDENTIAL';
-        } elseif ($class = 2){
-            $classification = 'COMMERCIAL';
-        } elseif ($class = 3){
-            $classification = 'COMMERCIAL A';
-        } elseif ($class = 4){
-            $classification = 'COMMERCIAL B';
-        } elseif ($class = 5){
-            $classification = 'COMMERCIAL C';
-        } elseif ($class = 6){
-            $classification = 'INDUSTRIAL';
-        } elseif ($class = 7){
-            $classification = 'GOVERNMENT';
-        } elseif ($class = 8){
-            $classification = 'TEMPORARY SERVICE';
-        }
+        $classification = match ((int) $row['consumertype']) {
+            1 => 'RESIDENTIAL',
+            2 => 'COMMERCIAL',
+            3 => 'COMMERCIAL A',
+            4 => 'COMMERCIAL B',
+            5 => 'COMMERCIAL C',
+            6 => 'INDUSTRIAL',
+            7 => 'GOVERNMENT',
+            8 => 'TEMPORARY SERVICE',
+            default => 'UNKNOWN',
+        };
 
         //maintenance fee
-        $msize = $row['metersize'];
-        if ($msize == 1) {
-            $mf = 20;
-        } elseif ($msize == 2){
-            $mf = 30;
-        } elseif ($msize == 3){
-            $mf = 40;
-        } elseif ($msize == 4){
-            $mf = 60;
-        } elseif ($msize == 5){
-            $mf = 80;
-        } elseif ($msize == 8){
-            $mf = 80;
-        } elseif ($msize == 9){
-            $mf = 80;
-        }
+        $mf = match ((int) $row['metersize']) {
+            1 => 20,
+            2 => 30,
+            3 => 40,
+            4 => 60,
+            5, 8, 9 => 80,
+            default => 0,
+        };
 
         //senior discount and franchise tax
         $address = $row['address'];

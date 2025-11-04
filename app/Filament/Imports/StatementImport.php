@@ -114,34 +114,25 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
                 ]);
                 DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=1;');
 
-                $abd = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
+                // 📱 SMS Report creation
+                $account = Account::where('accmasterlist', $row['accountno'])->first();
+                $mobile  = $account?->mobile;
 
-                if((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] <= 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                        SmsReport::create(
-                            [
-                                    'account_number'          => $row['accountno'],
-                                    'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                    'amount_before_due'     => $abd,
-                                    'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('m/d/Y') : null,
-                                    'status'                => 'Unsent',
-                                ]);
+                if ($mobile && strlen($mobile) === 10) {
+                    $dueDate = $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('m/d/Y') : null;
+
+                    // If arrears > 0, move due date 10 days earlier
+                    if ($row['arrears'] > 0 && $dueDate) {
+                        $dueDate = $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->subDays(10)->format('m/d/Y') : null;
                     }
-                } elseif ((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] > 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                    SmsReport::create(
-                        [
-                                'account_number'          => $row['accountno'],
-                                'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                'amount_before_due'     => $abd,
-                                'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->subDays(10)->format('m/d/Y') : null,
-                                'status'                => 'Unsent',
-                            ]);
-                    }
+
+                    SmsReport::create([
+                        'account_number'   => $row['accountno'],
+                        'mobile'           => $mobile,
+                        'amount_before_due'=> $beforedue,
+                        'due_date'         => $dueDate,
+                        'status'           => 'Unsent',
+                    ]);
                 }
     }
 
