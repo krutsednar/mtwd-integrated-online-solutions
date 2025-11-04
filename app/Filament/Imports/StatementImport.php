@@ -83,7 +83,7 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
             $afterdue = 0;
         }
 
-        //penalty
+        //penalties
         $penalty = ($row['billamount'] - $scd) * .15;
 
         DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=0;');
