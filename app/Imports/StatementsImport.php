@@ -5,164 +5,155 @@ namespace App\Imports;
 use App\Models\Statement;
 use App\Models\Account;
 use App\Models\SmsReport;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Log;
+use Carbon\Carbon;
+use DateTimeInterface;
+use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Validators\Failure;
-use Illuminate\Validation\Rule;
-use \DateTimeInterface;
-use DateTime;
-use DB;
 use Maatwebsite\Excel\Concerns\WithUpserts;
-use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Concerns\WithValidation;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Validation\Rule;
 
-class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, WithHeadingRow, WithValidation, SkipsOnFailure, WithUpserts
+class StatementsImport implements
+    ToModel,
+    WithBatchInserts,
+    WithChunkReading,
+    WithHeadingRow,
+    WithValidation,
+    SkipsOnFailure,
+    WithUpserts,
+    ShouldQueue
 {
     use Importable, SkipsFailures;
 
-    /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
     public function model(array $row)
     {
-        //classification
-        $class = $row['consumertype'];
-        if ($class = 1){
-            $classification = 'RESIDENTIAL';
-        } elseif ($class = 2){
-            $classification = 'COMMERCIAL';
-        } elseif ($class = 3){
-            $classification = 'COMMERCIAL A';
-        } elseif ($class = 4){
-            $classification = 'COMMERCIAL B';
-        } elseif ($class = 5){
-            $classification = 'COMMERCIAL C';
-        } elseif ($class = 6){
-            $classification = 'INDUSTRIAL';
-        } elseif ($class = 7){
-            $classification = 'GOVERNMENT';
-        } elseif ($class = 8){
-            $classification = 'TEMPORARY SERVICE';
-        }
+        // ✅ Fix: use == instead of =
+        $class = $row['consumertype'] ?? null;
+        $classification = match ((int)$class) {
+            1 => 'RESIDENTIAL',
+            2 => 'COMMERCIAL',
+            3 => 'COMMERCIAL A',
+            4 => 'COMMERCIAL B',
+            5 => 'COMMERCIAL C',
+            6 => 'INDUSTRIAL',
+            7 => 'GOVERNMENT',
+            8 => 'TEMPORARY SERVICE',
+            default => 'UNKNOWN',
+        };
 
-        //maintenance fee
-        $msize = $row['metersize'];
-        if ($msize == 1) {
-            $mf = 20;
-        } elseif ($msize == 2){
-            $mf = 30;
-        } elseif ($msize == 3){
-            $mf = 40;
-        } elseif ($msize == 4){
-            $mf = 60;
-        } elseif ($msize == 5){
-            $mf = 80;
-        } elseif ($msize == 8){
-            $mf = 80;
-        } elseif ($msize == 9){
-            $mf = 80;
-        }
+        // ✅ Maintenance fee by meter size
+        $msize = (int)($row['metersize'] ?? 0);
+        $mf = match ($msize) {
+            1 => 20,
+            2 => 30,
+            3 => 40,
+            4 => 60,
+            5, 8, 9 => 80,
+            default => 0,
+        };
 
-        //senior discount and franchise tax
-        $address = $row['address'];
+        // ✅ Senior discount and franchise tax
+        $address = $row['address'] ?? '';
+        $billAmount = (float)($row['billamount'] ?? 0);
+        $cum = (float)($row['cum'] ?? 0);
 
-        // if (Str::endsWith($address, '-S-') and ($msize = 1 or $msize = 2 or $msize = 3 or $msize = 4)){
-        if (Str::endsWith($address, '-S-') and ($row['cum'] <= 30)){
-            $scd = $row['billamount'] * 0.05;
-            $ft =  ($row['billamount'] - ($row['billamount'] * .05)) * 0.02;
+        if (Str::endsWith($address, '-S-') && $cum <= 30) {
+            $scd = $billAmount * 0.05;
+            $ft = ($billAmount - $scd) * 0.02;
         } else {
             $scd = 0;
-            $ft = $row['billamount'] * 0.02;
+            $ft = $billAmount * 0.02;
         }
 
-        //arrears, penalties, after dues, before dues and advance payments
+        // ✅ Handle arrears, advance payment, penalty, due amounts
+        $arrearsVal = (float)($row['arrears'] ?? 0);
+        $otherCharges = (float)($row['othercharges'] ?? 0);
+        $penalty = ($billAmount - $scd) * 0.15;
 
-        if ($row['arrears'] >= 0){
-            $arrears = $row['arrears'];
-            $advancepayment = 0;
-            $penalty = ($row['billamount'] - $scd) * .15;
-            $afterdue = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment) + $penalty;
-            $beforedue = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
-        } elseif ($row['arrears'] < 0){
+        if ($arrearsVal >= 0) {
+            $arrears = $arrearsVal;
+            $advancePayment = 0;
+        } else {
             $arrears = 0;
-            $advancepayment = $row['arrears'];
-            $penalty = 0;
-            $beforedue = 0;
-            $afterdue = 0;
+            $advancePayment = abs($arrearsVal);
         }
 
-        //penalty
-        $penalty = ($row['billamount'] - $scd) * .15;
+        $beforeDue = $billAmount + $mf + $ft + $arrears + $otherCharges - $scd - $advancePayment;
+        $afterDue = $beforeDue + ($arrearsVal >= 0 ? $penalty : 0);
 
+        // ✅ Convert dates safely
+        $readingDate = !empty($row['billdate']) ? Carbon::createFromFormat('m/d/Y', $row['billdate'])->format('Y-m-d') : null;
+        $dueDate = !empty($row['duedate']) ? Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('Y-m-d') : null;
+
+        // ✅ Save Statement
         DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=0;');
+
         $statement = Statement::updateOrCreate(
             ['account_number' => $row['accountno']],
             [
-                    'account_name'              => $row['name'],
-                    'address'                   => $address,
-                    'classification'            => $classification,
-                    'reading_date'              => $row['billdate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['billdate'])->format('m/d/Y') : null,
-                    'due_date'                  => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('m/d/Y') : null,
-                    'previous_reading_cum'      => $row['prevrdg'],
-                    'present_reading_cum'       => $row['presrdg'],
-                    'consumption_cum'           => $row['cum'],
-                    'current_bill'              => $row['billamount'],
-                    'maintenance_fee'           => $mf,
-                    'franchise_tax'             => $ft,
-                    'arrears'                   => $arrears,
-                    'other_charges'             => $row['othercharges'],
-                    'advance_payment'           => abs($advancepayment),
-                    'senior_citizen_discount'   => abs($scd),
-                    'amount_before_due_date'    => $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment),
-                    'penalty'                   => $penalty,
-                    'amount_after_due_date'     => $afterdue,
-                    'months_in_arrears'         => $row['arrearcount'],
-                    'paid'                      => trim(strtoupper('UNPAID')),
-                    'transmitted'               => trim(strtoupper('NO')),
+                'account_name'              => $row['name'],
+                'address'                   => $address,
+                'classification'            => $classification,
+                'reading_date'              => $readingDate,
+                'due_date'                  => $dueDate,
+                'previous_reading_cum'      => $row['prevrdg'] ?? 0,
+                'present_reading_cum'       => $row['presrdg'] ?? 0,
+                'consumption_cum'           => $cum,
+                'current_bill'              => $billAmount,
+                'maintenance_fee'           => $mf,
+                'franchise_tax'             => $ft,
+                'arrears'                   => $arrears,
+                'other_charges'             => $otherCharges,
+                'advance_payment'           => $advancePayment,
+                'senior_citizen_discount'   => $scd,
+                'amount_before_due_date'    => $beforeDue,
+                'penalty'                   => $penalty,
+                'amount_after_due_date'     => $afterDue,
+                'months_in_arrears'         => $row['arrearcount'] ?? 0,
+                'paid'                      => 'UNPAID',
+                'transmitted'               => 'NO',
+            ]
+        );
+
+        DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        // ✅ Create SMS Report (skip duplicates)
+        $account = Account::where('accmasterlist', $row['accountno'])->first();
+        $mobile = $account?->mobile;
+
+        if ($mobile && strlen($mobile) === 10) {
+            $smsDueDate = $dueDate;
+
+            if ($arrearsVal > 0 && $dueDate) {
+                $smsDueDate = Carbon::parse($dueDate)->subDays(10)->format('m/d/Y');
+            }
+
+            // Prevent duplicate Unsent entries for same account + due date
+            $exists = SmsReport::where('account_number', $row['accountno'])
+                ->where('status', 'Unsent')
+                ->whereDate('due_date', Carbon::parse($smsDueDate))
+                ->exists();
+
+            if (!$exists) {
+                SmsReport::create([
+                    'account_number'    => $row['accountno'],
+                    'mobile'            => $mobile,
+                    'amount_before_due' => $beforeDue,
+                    'due_date'          => $smsDueDate,
+                    'status'            => 'Unsent',
                 ]);
-                DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=1;');
-
-                // $accounts = Account::where('accmasterlist', $row['accountno'])->get();
-
-                $abd = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
-
-                if((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] <= 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                        SmsReport::create(
-                            [
-                                    'account_number'          => $row['accountno'],
-                                    'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                    'amount_before_due'     => $abd,
-                                    'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('m/d/Y') : null,
-                                    'status'                => 'Unsent',
-                                ]);
-                    }
-                } elseif ((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] > 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                    SmsReport::create(
-                        [
-                                'account_number'          => $row['accountno'],
-                                'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                'amount_before_due'     => $abd,
-                                'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->subDays(10)->format('m/d/Y') : null,
-                                'status'                => 'Unsent',
-                            ]);
-                    }
-                }
+            }
+        }
     }
 
     public function batchSize(): int
