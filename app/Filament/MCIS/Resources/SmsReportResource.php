@@ -50,11 +50,8 @@ class SmsReportResource extends Resource
         return $table
             ->query(function () {
                 return SmsReport::query()
-                    ->orderBy('created_at', 'desc')
-                    ->where(function ($query) {
-                        $query->whereNotNull('account_number')
-                            ->orWhere('account_number', '!=', '');
-                    });
+                    ->where('created_at', '>=', now()->subYear())
+                    ->orderByDesc('created_at');
             })
             ->columns([
                 Tables\Columns\TextColumn::make('account_number')
