@@ -58,19 +58,19 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
         //maintenance fee
         $msize = $row['metersize'];
         if ($msize == 1) {
-            $mf = 10;
-        } elseif ($msize == 2){
-            $mf = 15;
-        } elseif ($msize == 3){
             $mf = 20;
-        } elseif ($msize == 4){
+        } elseif ($msize == 2){
             $mf = 30;
+        } elseif ($msize == 3){
+            $mf = 40;
+        } elseif ($msize == 4){
+            $mf = 60;
         } elseif ($msize == 5){
-            $mf = 40;
+            $mf = 80;
         } elseif ($msize == 8){
-            $mf = 40;
+            $mf = 80;
         } elseif ($msize == 9){
-            $mf = 40;
+            $mf = 80;
         }
 
         //senior discount and franchise tax
