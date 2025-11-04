@@ -51,7 +51,7 @@ class SmsReportResource extends Resource
             ->query(function () {
                 return SmsReport::query()
                     ->where('created_at', '>=', now()->subYear())
-                    ->orderByDesc('created_at');
+                    ->orderByDesc('id');
             })
             ->columns([
                 Tables\Columns\TextColumn::make('account_number')
