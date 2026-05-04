@@ -47,7 +47,7 @@ class ListOnlineJobOrders extends ListRecords
                 return $data;
             })
              ->after(function (OnlineJobOrder $record) {
-                $divisionCode = $record->jocode?->division?->code;
+                $divisionCode = $record->jobOrderCode?->division?->code;
 
                 if ($divisionCode) {
                     $record->division_concerned = $divisionCode;

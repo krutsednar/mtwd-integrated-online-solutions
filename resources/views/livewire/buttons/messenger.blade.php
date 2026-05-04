@@ -9,7 +9,7 @@
         href="{{ url('/messenger') }}"
         class="relative inline-flex items-center justify-center p-2 transition rounded-full hover:bg-gray-100"
         aria-label="MTWD Messenger"
-        wire:poll.3s="updateCount"
+        wire:poll.30s="updateCount"
     >
         <x-filament::icon-button
             icon="heroicon-o-chat-bubble-left-right"

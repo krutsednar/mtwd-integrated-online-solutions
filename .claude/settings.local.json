@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(rm \"D:/System Development/Web App/2025/mtwd-integrated-online-solutions/app/Filament/ImportsBkup/StatementImport.php.bkup\")",
+      "Bash(rmdir \"D:/System Development/Web App/2025/mtwd-integrated-online-solutions/app/Filament/ImportsBkup\")",
+      "Bash(composer dump-autoload *)",
+      "Bash(php \"D:/System Development/Web App/2025/mtwd-integrated-online-solutions/artisan\" route:list)",
+      "Bash(grep -rn 'protected\\\\s*static.*database\\\\|protected\\\\s*$model\\\\|use.*DeleteBulkAction\\\\|protected.*policy' 'D:\\\\System Development\\\\Web App\\\\2025\\\\mtwd-integrated-online-solutions\\\\app\\\\Filament\\\\MCIS\\\\Resources')",
+      "Bash(grep -rn 'table\\\\|protected.*$connection\\\\|protected.*connection' 'D:\\\\System Development\\\\Web App\\\\2025\\\\mtwd-integrated-online-solutions\\\\app\\\\Models\\\\UserPayment.php')",
+      "Bash(grep -rn \"foreach.*->get\\(\\)\\\\|foreach.*->all\\(\\)\\\\|foreach \\\\$.*->\" \"D:\\\\System Development\\\\Web App\\\\2025\\\\mtwd-integrated-online-solutions\\\\app\\\\Filament\\\\Executive\\\\Widgets\\\\JobOrderPerCategory.php\")",
+      "Bash(grep -rn 'protected.*isGuarded\\\\|protected.*$guarded\\\\|protected.*$fillable' 'D:\\\\System Development\\\\Web App\\\\2025\\\\mtwd-integrated-online-solutions\\\\app\\\\Models\\\\UserPayment.php')",
+      "Bash(grep -n 'protected.*connection\\\\|table\\\\s*=\\\\|protected.*$table' app/Models/UserPayment.php)",
+      "Bash(grep -n \"//\" app/Filament/MOJO/Widgets/JobOrderPerZoneChart.php)",
+      "Bash(grep -rn '$division\\\\[' app/)",
+      "Bash(php artisan *)",
+      "mcp__Claude_in_Chrome__tabs_context_mcp",
+      "mcp__Claude_in_Chrome__computer",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:9999/)",
+      "mcp__Claude_in_Chrome__navigate"
+    ]
+  }
+}

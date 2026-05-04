@@ -190,7 +190,10 @@ class StatementResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete Billing Statement Records?')
+                        ->modalDescription('This will soft-delete the selected records from the external billing database (kitdb). This action is logged and reversible, but affects data owned by the billing system team.'),
                 ]),
             ]);
     }

@@ -30,13 +30,6 @@ class User extends Authenticatable implements FilamentUser
         ->logFillable();
     }
 
-    protected $dates = [
-        'birthday',
-        'email_verified_at',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
 
     /**
      * The attributes that are mass assignable.
@@ -80,9 +73,13 @@ class User extends Authenticatable implements FilamentUser
     protected function casts(): array
     {
         return [
+            'birthday'          => 'date',
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_approved' => 'boolean',
+            'created_at'        => 'datetime',
+            'updated_at'        => 'datetime',
+            'deleted_at'        => 'datetime',
+            'password'          => 'hashed',
+            'is_approved'       => 'boolean',
         ];
     }
 

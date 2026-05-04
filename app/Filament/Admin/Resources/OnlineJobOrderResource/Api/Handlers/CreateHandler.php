@@ -29,7 +29,7 @@ class CreateHandler extends Handlers {
     {
         $model = new (static::getModel());
 
-        $model->fill($request->all());
+        $model->fill($request->validated());
 
         $model->save();
 

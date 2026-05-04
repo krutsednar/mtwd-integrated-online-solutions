@@ -5,6 +5,7 @@ namespace App\Livewire\Buttons;
 use Livewire\Component;
 use Filament\Notifications\Notification;
 use Filament\Notifications\Actions\Action;
+use Illuminate\Support\Facades\Cache;
 
 class Messenger extends Component
 {
@@ -17,7 +18,9 @@ class Messenger extends Component
 
     public function updateCount()
     {
-        $newCount = auth()->check() ? auth()->user()->getUnreadCount() : 0;
+        $newCount = auth()->check()
+            ? Cache::remember('unread_messages_' . auth()->id(), 28, fn () => auth()->user()->getUnreadCount())
+            : 0;
 
         if ($newCount > $this->count) {
             Notification::make()
