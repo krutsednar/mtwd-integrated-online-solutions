@@ -77,7 +77,7 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
         $penalty = ($row['billamount'] - $scd) * 0.15;
 
         // Calculate Totals
-        $beforedue = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
+        $beforedue = $row['billamount'] + $mf + $ft + $arrears + abs($row['othercharges']) - abs($scd) - abs($advancepayment);
 
         // If arrears are negative (advance), the 'after due' is usually not applicable/zero
         $afterdue = ($row['arrears'] < 0) ? 0 : ($beforedue + $penalty);
@@ -100,7 +100,7 @@ class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, W
                 'maintenance_fee'         => $mf,
                 'franchise_tax'           => $ft,
                 'arrears'                 => $arrears,
-                'other_charges'           => $row['othercharges'],
+                'other_charges'           => abs($row['othercharges']),
                 'advance_payment'         => abs($advancepayment),
                 'senior_citizen_discount' => abs($scd),
                 'amount_before_due_date'  => $beforedue,
