@@ -33,11 +33,7 @@ class UpdateForm extends Model
         'attachment',
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+    // $dates is deprecated since Laravel 10 — handled automatically by Eloquent
 
     public const APPROVAL_SELECT = [
         'Pending'     => 'Pending',
@@ -88,9 +84,19 @@ class UpdateForm extends Model
         return $date->format('Y-m-d H:i:s');
     }
 
-    public function users()
+    public static function isConnectionAvailable(): bool
     {
-        return $this->hasMany(User::class, 'id', 'validated_by');
+        try {
+            \DB::connection('mcisdb')->getPdo();
+            return true;
+        } catch (\Exception) {
+            return false;
+        }
+    }
+
+    public function validatedBy()
+    {
+        return $this->belongsTo(User::class, 'validated_by');
     }
 
     // public function approves()

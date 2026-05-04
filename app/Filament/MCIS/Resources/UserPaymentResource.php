@@ -118,7 +118,11 @@ class UserPaymentResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete payment records?')
+                        ->modalDescription('These records exist in the kitdb billing database. Deletion is permanent and cannot be undone. Proceed only if you are certain these records should be removed.')
+                        ->modalSubmitActionLabel('Yes, delete permanently'),
                 ]),
             ]);
     }

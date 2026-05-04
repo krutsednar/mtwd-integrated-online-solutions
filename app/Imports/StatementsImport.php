@@ -2,165 +2,151 @@
 
 namespace App\Imports;
 
-use App\Models\Statement;
 use App\Models\Account;
 use App\Models\SmsReport;
+use App\Models\Statement;
+use Carbon\Carbon;
+use DB;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
+use Maatwebsite\Excel\Concerns\Importable;
+use Maatwebsite\Excel\Concerns\SkipsFailures;
+use Maatwebsite\Excel\Concerns\SkipsOnFailure;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithBatchInserts;
 use Maatwebsite\Excel\Concerns\WithChunkReading;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Str;
-use Carbon\Carbon;
-use Maatwebsite\Excel\Concerns\Importable;
-use Maatwebsite\Excel\Concerns\WithValidation;
-use Maatwebsite\Excel\Concerns\SkipsOnFailure;
-use Maatwebsite\Excel\Concerns\SkipsFailures;
-use Maatwebsite\Excel\Validators\Failure;
-use Illuminate\Validation\Rule;
-use \DateTimeInterface;
-use DateTime;
-use DB;
 use Maatwebsite\Excel\Concerns\WithUpserts;
-use Illuminate\Support\Facades\Http;
+use Maatwebsite\Excel\Concerns\WithValidation;
+use Maatwebsite\Excel\Events\AfterImport;
+use Maatwebsite\Excel\Events\BeforeImport;
+use \DateTimeInterface;
 
-class StatementsImport implements ToModel, WithBatchInserts, WithChunkReading, WithHeadingRow, WithValidation, SkipsOnFailure, WithUpserts
+class StatementsImport implements ToModel, ShouldQueue, WithBatchInserts, WithChunkReading, WithHeadingRow, WithValidation, SkipsOnFailure, WithUpserts, WithEvents
 {
     use Importable, SkipsFailures;
 
-    /**
-    * @param array $row
-    *
-    * @return \Illuminate\Database\Eloquent\Model|null
-    */
     public function model(array $row)
     {
-        //classification
-        $class = $row['consumertype'];
-        if ($class = 1){
-            $classification = 'RESIDENTIAL';
-        } elseif ($class = 2){
-            $classification = 'COMMERCIAL';
-        } elseif ($class = 3){
-            $classification = 'COMMERCIAL A';
-        } elseif ($class = 4){
-            $classification = 'COMMERCIAL B';
-        } elseif ($class = 5){
-            $classification = 'COMMERCIAL C';
-        } elseif ($class = 6){
-            $classification = 'INDUSTRIAL';
-        } elseif ($class = 7){
-            $classification = 'GOVERNMENT';
-        } elseif ($class = 8){
-            $classification = 'TEMPORARY SERVICE';
-        }
+        // C6 fix: use match() — original used = (assignment) so every row became RESIDENTIAL
+        $classification = match ((int) $row['consumertype']) {
+            1       => 'RESIDENTIAL',
+            2       => 'COMMERCIAL',
+            3       => 'COMMERCIAL A',
+            4       => 'COMMERCIAL B',
+            5       => 'COMMERCIAL C',
+            6       => 'INDUSTRIAL',
+            7       => 'GOVERNMENT',
+            8       => 'TEMPORARY SERVICE',
+            default => 'RESIDENTIAL',
+        };
 
-        //maintenance fee
-        $msize = $row['metersize'];
-        if ($msize == 1) {
-            $mf = 20;
-        } elseif ($msize == 2){
-            $mf = 30;
-        } elseif ($msize == 3){
-            $mf = 40;
-        } elseif ($msize == 4){
-            $mf = 60;
-        } elseif ($msize == 5){
-            $mf = 80;
-        } elseif ($msize == 8){
-            $mf = 80;
-        } elseif ($msize == 9){
-            $mf = 80;
-        }
+        // W-D fix: default 0 prevents undefined-variable warning for unknown meter sizes
+        $mf = match ((int) $row['metersize']) {
+            1       => 20,
+            2       => 30,
+            3       => 40,
+            4       => 60,
+            5, 8, 9 => 80,
+            default => 0,
+        };
 
-        //senior discount and franchise tax
         $address = $row['address'];
 
-        // if (Str::endsWith($address, '-S-') and ($msize = 1 or $msize = 2 or $msize = 3 or $msize = 4)){
-        if (Str::endsWith($address, '-S-') and ($row['cum'] <= 30)){
+        if (Str::endsWith($address, '-S-') && $row['cum'] <= 30) {
             $scd = $row['billamount'] * 0.05;
-            $ft =  ($row['billamount'] - ($row['billamount'] * .05)) * 0.02;
+            $ft  = ($row['billamount'] - ($row['billamount'] * 0.05)) * 0.02;
         } else {
             $scd = 0;
-            $ft = $row['billamount'] * 0.02;
+            $ft  = $row['billamount'] * 0.02;
         }
 
-        //arrears, penalties, after dues, before dues and advance payments
-
-        if ($row['arrears'] >= 0){
-            $arrears = $row['arrears'];
+        if ($row['arrears'] >= 0) {
+            $arrears        = $row['arrears'];
             $advancepayment = 0;
-            $penalty = ($row['billamount'] - $scd) * .15;
-            $afterdue = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment) + $penalty;
-            $beforedue = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
-        } elseif ($row['arrears'] < 0){
-            $arrears = 0;
+            $penalty        = ($row['billamount'] - $scd) * 0.15;
+            $beforedue      = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd);
+            $afterdue       = $beforedue + $penalty;
+        } else {
+            $arrears        = 0;
             $advancepayment = $row['arrears'];
-            $penalty = 0;
-            $beforedue = 0;
-            // $afterdue = 0;
-            $afterdue = $row['billamount'] + $mf + $ft + $row['othercharges'] - abs($scd) - abs($advancepayment) + $penalty;
+            $penalty        = 0;
+            $beforedue      = 0;
+            $afterdue       = $row['billamount'] + $mf + $ft + $row['othercharges'] - abs($scd) - abs($advancepayment);
         }
 
-        //penalty
-        $penalty = ($row['billamount'] - $scd) * .15;
+        // Recompute $abd consistently (matches original semantics where beforedue=0 on advance payment)
+        $abd = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
 
-        DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=0;');
-        $statement = Statement::updateOrCreate(
+        // W-A fix: FK checks moved to registerEvents() — removed from per-row loop
+        Statement::updateOrCreate(
             ['account_number' => $row['accountno']],
             [
-                    'account_name'              => $row['name'],
-                    'address'                   => $address,
-                    'classification'            => $classification,
-                    'reading_date'              => $row['billdate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['billdate'])->format('Y-m-d') : null,
-                    'due_date'                  => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('Y-m-d') : null,
-                    'previous_reading_cum'      => $row['prevrdg'],
-                    'present_reading_cum'       => $row['presrdg'],
-                    'consumption_cum'           => $row['cum'],
-                    'current_bill'              => $row['billamount'],
-                    'maintenance_fee'           => $mf,
-                    'franchise_tax'             => $ft,
-                    'arrears'                   => $arrears,
-                    'other_charges'             => $row['othercharges'],
-                    'advance_payment'           => abs($advancepayment),
-                    'senior_citizen_discount'   => abs($scd),
-                    'amount_before_due_date'    => $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment),
-                    'penalty'                   => $penalty,
-                    'amount_after_due_date'     => $afterdue,
-                    'months_in_arrears'         => $row['arrearcount'],
-                    'paid'                      => trim(strtoupper('UNPAID')),
-                    'transmitted'               => trim(strtoupper('NO')),
-                ]);
+                'account_name'            => $row['name'],
+                'address'                 => $address,
+                'classification'          => $classification,
+                'reading_date'            => $row['billdate']
+                    ? Carbon::createFromFormat('m/d/Y', $row['billdate'])->format('Y-m-d')
+                    : null,
+                'due_date'                => $row['duedate']
+                    ? Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('Y-m-d')
+                    : null,
+                'previous_reading_cum'    => $row['prevrdg'],
+                'present_reading_cum'     => $row['presrdg'],
+                'consumption_cum'         => $row['cum'],
+                'current_bill'            => $row['billamount'],
+                'maintenance_fee'         => $mf,
+                'franchise_tax'           => $ft,
+                'arrears'                 => $arrears,
+                'other_charges'           => $row['othercharges'],
+                'advance_payment'         => abs($advancepayment),
+                'senior_citizen_discount' => abs($scd),
+                'amount_before_due_date'  => $beforedue,
+                'penalty'                 => $penalty,
+                'amount_after_due_date'   => $afterdue,
+                'months_in_arrears'       => $row['arrearcount'],
+                'paid'                    => 'UNPAID',
+                'transmitted'             => 'NO',
+            ]
+        );
+
+        // W-B fix: single Account query per row (was 4 redundant queries)
+        $mobile = Account::where('accmasterlist', $row['accountno'])
+            ->whereNotNull('mobile')
+            ->value('mobile');
+
+        if ($mobile && strlen($mobile) === 10 && $abd >= 0) {
+            $dueDate = $row['duedate']
+                ? Carbon::createFromFormat('m/d/Y', $row['duedate'])
+                : null;
+
+            SmsReport::create([
+                'account_number'    => $row['accountno'],
+                'mobile'            => $mobile,
+                'amount_before_due' => $abd,
+                'due_date'          => $dueDate
+                    ? ($row['arrears'] > 0
+                        ? $dueDate->subDays(10)->format('m/d/Y')
+                        : $dueDate->format('m/d/Y'))
+                    : null,
+                'status'            => 'Unsent',
+            ]);
+        }
+    }
+
+    // W-A fix: FK checks disabled/enabled once per import, not once per row
+    public function registerEvents(): array
+    {
+        return [
+            BeforeImport::class => function () {
+                DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=0;');
+            },
+            AfterImport::class => function () {
                 DB::connection('kitdb')->statement('SET FOREIGN_KEY_CHECKS=1;');
-
-                $abd = $row['billamount'] + $mf + $ft + $arrears + $row['othercharges'] - abs($scd) - abs($advancepayment);
-
-                if((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] <= 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                        SmsReport::create(
-                            [
-                                    'account_number'          => $row['accountno'],
-                                    'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                    'amount_before_due'     => $abd,
-                                    'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->format('m/d/Y') : null,
-                                    'status'                => 'Unsent',
-                                ]);
-                    }
-                } elseif ((!empty(Account::where('accmasterlist', $row['accountno'])->value('mobile')) OR !is_null(Account::where('accmasterlist', $row['accountno'])->value('mobile'))) AND ($abd >= 0) AND ($row['arrears'] > 0))
-                {
-                    if(strlen(Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile')) === 10)
-                    {
-                    SmsReport::create(
-                        [
-                                'account_number'          => $row['accountno'],
-                                'mobile'                => Account::where('accmasterlist', $row['accountno'])->whereNotNull('mobile')->value('mobile'),
-                                'amount_before_due'     => $abd,
-                                'due_date'              => $row['duedate'] ? \Carbon\Carbon::createFromFormat('m/d/Y', $row['duedate'])->subDays(10)->format('m/d/Y') : null,
-                                'status'                => 'Unsent',
-                            ]);
-                    }
-                }
+            },
+        ];
     }
 
     public function batchSize(): int

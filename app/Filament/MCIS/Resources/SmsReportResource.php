@@ -93,7 +93,10 @@ class SmsReportResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete SMS Report Records?')
+                        ->modalDescription('This will soft-delete the selected records from the external SMS database (mepdb). Deleting SMS reports removes the audit trail of which accounts were notified and when.'),
                 ]),
             ]);
     }

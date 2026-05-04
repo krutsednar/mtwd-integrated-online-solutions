@@ -3,6 +3,7 @@
 namespace App\Filament\MOJO\Resources;
 
 use DB;
+use Cache;
 use Carbon\Carbon;
 use Filament\Forms;
 use App\Models\City;
@@ -80,9 +81,19 @@ class OnlineJobOrderResource extends Resource
                 Forms\Components\TextInput::make('account_number')
                     ->reactive()
                     ->afterStateUpdated(function (callable $set, $state) {
-                        $data = DB::connection('kitdb')->table('accounts')
-                            ->where('accmasterlist', $state)
-                            ->first();
+                        $data = Cache::remember(
+                            "account_lookup_{$state}",
+                            now()->addMinutes(config('mtwd.account_lookup_cache_ttl', 10)),
+                            function () use ($state) {
+                                try {
+                                    return DB::connection('kitdb')->table('accounts')
+                                        ->where('accmasterlist', $state)
+                                        ->first();
+                                } catch (\Exception $e) {
+                                    return null;
+                                }
+                            }
+                        );
 
                         if ($data) {
                             $set('registered_name', $data->mastername ?? 'No Record');
@@ -99,7 +110,6 @@ class OnlineJobOrderResource extends Resource
                             $set('lat', null);
                             $set('lng', null);
                         }
-
                     }),
                 Forms\Components\TextInput::make('lat')
                     ->readOnly()
@@ -207,23 +217,29 @@ class OnlineJobOrderResource extends Resource
 
     public static function table(Table $table): Table
     {
+        $barangayNames = \App\Models\Barangay::pluck('name', 'id');
+        $cityNames     = \App\Models\City::pluck('name', 'id');
+        $usersByJoId   = \App\Models\User::whereNotNull('jo_id')->get()->keyBy('jo_id');
+        $usersByEmpNo  = \App\Models\User::whereNotNull('employee_number')->get()->keyBy('employee_number');
+
         return $table
             ->query(function () {
                 $user = auth()->user();
+                $eagerLoads = ['account', 'jobOrderCode.division', 'jobOrderCode.category', 'joDispatches', 'joAccomplishments'];
 
-                if (in_array($user->division_id, [2022, 2023, 7, 2, 3, 4, 5])) {
+                if (in_array($user->division_id, config('mtwd.supervisor_division_ids'))) {
                     return OnlineJobOrder::query()
-                        ->with('account')
+                        ->with($eagerLoads)
                         ->orderBy('id', 'desc');
                 }
 
                 return OnlineJobOrder::query()
-                    ->whereHas('jocode.division', function ($query) use ($user) {
+                    ->whereHas('jobOrderCode.division', function ($query) use ($user) {
                         $query->where('code', $user->division_id);
                     })
                     ->orWhere('processed_by', $user->jo_id)
                     ->orWhere('processed_by', str_replace('-', '', $user->employee_number))
-                    ->with('account')
+                    ->with($eagerLoads)
                     ->orderBy('id', 'desc');
             })
             ->headerActions([
@@ -261,17 +277,17 @@ class OnlineJobOrderResource extends Resource
                     ->description(fn (OnlineJobOrder $record): string => $record->registered_name ?? 'No Record', position: 'below')
                     ->searchable()
                     ->wrap(),
-                Tables\Columns\TextColumn::make('jocode.description')
+                Tables\Columns\TextColumn::make('jobOrderCode.description')
                 ->label('JO Type')
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('jocode.category.name')
+                Tables\Columns\TextColumn::make('jobOrderCode.category.name')
                 ->label('JO Category')
                 ->searchable()
                 ->wrap()
                     ->toggleable(),
-                Tables\Columns\TextColumn::make('jocode.division.name')
+                Tables\Columns\TextColumn::make('jobOrderCode.division.name')
                 ->label('Division Concerned')
                 ->searchable()
                 ->wrap()
@@ -286,9 +302,11 @@ class OnlineJobOrderResource extends Resource
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('address')
                 ->searchable()
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
-                })
+                ->getStateUsing(fn (OnlineJobOrder $record) =>
+                    trim($record->address ?? '')
+                    . ', ' . ($barangayNames[$record->barangay] ?? 'N/A')
+                    . ', ' . ($cityNames[$record->town] ?? 'N/A')
+                )
                 // ->wrap()
                 ->limit(30)
                 ->tooltip(function (TextColumn $column): ?string {
@@ -317,13 +335,10 @@ class OnlineJobOrderResource extends Resource
                 })
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('processed_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->processed_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->processed_by, '-', 2, 0))->first();
-                    }
-
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    $user = $usersByJoId[$record->processed_by]
+                        ?? $usersByEmpNo[substr_replace($record->processed_by ?? '', '-', 2, 0)]
+                        ?? null;
                     return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
@@ -334,19 +349,12 @@ class OnlineJobOrderResource extends Resource
                     ->searchable()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('forwarded_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->forwarded_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->forwarded_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->forwarded_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
-
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->forwarded_by) return '';
+                    $user = $usersByJoId[$record->forwarded_by]
+                        ?? $usersByEmpNo[substr_replace($record->forwarded_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -356,18 +364,12 @@ class OnlineJobOrderResource extends Resource
                     ->dateTime('F d, Y')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('received_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->received_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->received_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->received_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->received_by) return '';
+                    $user = $usersByJoId[$record->received_by]
+                        ?? $usersByEmpNo[substr_replace($record->received_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -377,18 +379,12 @@ class OnlineJobOrderResource extends Resource
                     ->dateTime('F d, Y')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('dispatched_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->dispatched_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->dispatched_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->dispatched_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->dispatched_by) return '';
+                    $user = $usersByJoId[$record->dispatched_by]
+                        ?? $usersByEmpNo[substr_replace($record->dispatched_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -398,18 +394,12 @@ class OnlineJobOrderResource extends Resource
                     ->dateTime('F d, Y')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('accomplishment_processed_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->accomplishment_processed_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->accomplishment_processed_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->accomplishment_processed_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->accomplishment_processed_by) return '';
+                    $user = $usersByJoId[$record->accomplishment_processed_by]
+                        ?? $usersByEmpNo[substr_replace($record->accomplishment_processed_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -436,18 +426,12 @@ class OnlineJobOrderResource extends Resource
                     ->wrap()
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('pad_received_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->pad_received_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->pad_received_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->pad_received_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->pad_received_by) return '';
+                    $user = $usersByJoId[$record->pad_received_by]
+                        ?? $usersByEmpNo[substr_replace($record->pad_received_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -457,18 +441,12 @@ class OnlineJobOrderResource extends Resource
                     ->dateTime('F d, Y')
                     ->toggleable(),
                 Tables\Columns\TextColumn::make('verified_by')
-                 ->getStateUsing(function (OnlineJobOrder $record) {
-                    $user = User::where('jo_id', $record->verified_by)->first();
-
-                    if (! $user) {
-                        $user = User::where('employee_number', substr_replace($record->verified_by, '-', 2, 0))->first();
-                    }
-
-                    if($record->verified_by){
-                        return $user ? "{$user->first_name} {$user->last_name}" : '';
-                    } else {
-                        return '';
-                    }
+                 ->getStateUsing(function (OnlineJobOrder $record) use ($usersByJoId, $usersByEmpNo) {
+                    if (! $record->verified_by) return '';
+                    $user = $usersByJoId[$record->verified_by]
+                        ?? $usersByEmpNo[substr_replace($record->verified_by, '-', 2, 0)]
+                        ?? null;
+                    return $user ? "{$user->first_name} {$user->last_name}" : '';
                 })
                 ->badge()
                 ->color('success')
@@ -500,7 +478,7 @@ class OnlineJobOrderResource extends Resource
                     ->placeholder('All Divisions')
                     ->query(function ($query, array $data) {
                         if (filled($data['value'])) {
-                            $query->whereHas('jocode.division', function ($q) use ($data) {
+                            $query->whereHas('jobOrderCode.division', function ($q) use ($data) {
                                 $q->where('id', $data['value']);
                             });
                         }
@@ -514,7 +492,7 @@ class OnlineJobOrderResource extends Resource
                     ->placeholder('All Categories')
                     ->query(function ($query, array $data) {
                         if (filled($data['value'])) {
-                        $query->whereHas('jocode.category', function ($q) use ($data) {
+                        $query->whereHas('jobOrderCode.category', function ($q) use ($data) {
                             $q->where('id', $data['value']);
                         });
                     }
@@ -589,7 +567,7 @@ class OnlineJobOrderResource extends Resource
                         ->columnSpanFull(),
                         TextEntry::make('date_requested')
                         ->dateTime('F d, Y'),
-                        TextEntry::make('jocode.description')
+                        TextEntry::make('jobOrderCode.description')
                         ->label('JO Type'),
                         TextEntry::make('status'),
                         TextEntry::make('requested_by'),
@@ -597,9 +575,11 @@ class OnlineJobOrderResource extends Resource
                         TextEntry::make('account_number'),
                         TextEntry::make('registered_name'),
                         TextEntry::make('address')
-                        ->formatStateUsing(function (OnlineJobOrder $record) {
-                            return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
-                            }),
+                        ->formatStateUsing(function (OnlineJobOrder $record) use ($barangayNames, $cityNames) {
+                            return trim($record->address ?? '')
+                                . ', ' . ($barangayNames[$record->barangay] ?? 'N/A')
+                                . ', ' . ($cityNames[$record->town] ?? 'N/A');
+                        }),
                         TextEntry::make('remarks'),
                         TextEntry::make('actions_taken'),
                         TextEntry::make('field_findings'),
@@ -642,9 +622,19 @@ class OnlineJobOrderResource extends Resource
                     Forms\Components\TextInput::make('account_number')
                         ->reactive()
                         ->afterStateUpdated(function (callable $set, $state) {
-                            $data = DB::connection('kitdb')->table('accounts')
-                                ->where('accmasterlist', $state)
-                                ->first();
+                            $data = Cache::remember(
+                                "account_lookup_{$state}",
+                                now()->addMinutes(config('mtwd.account_lookup_cache_ttl', 10)),
+                                function () use ($state) {
+                                    try {
+                                        return DB::connection('kitdb')->table('accounts')
+                                            ->where('accmasterlist', $state)
+                                            ->first();
+                                    } catch (\Exception $e) {
+                                        return null;
+                                    }
+                                }
+                            );
 
                             if ($data) {
                                 $set('registered_name', $data->mastername ?? 'No Record');
@@ -661,7 +651,6 @@ class OnlineJobOrderResource extends Resource
                                 $set('lat', null);
                                 $set('lng', null);
                             }
-
                         }),
                     Forms\Components\TextInput::make('lat')
                         ->readOnly()
@@ -922,13 +911,13 @@ class OnlineJobOrderResource extends Resource
                                     ->multiple()
                                     ->options(function (callable $get) {
                                         $joNumber = $get('jo_number');
-                                        $onlineJobOrder = OnlineJobOrder::with('jocode.division')->where('jo_number', $joNumber)->first();
+                                        $onlineJobOrder = OnlineJobOrder::with('jobOrderCode.division')->where('jo_number', $joNumber)->first();
 
-                                        if (! $onlineJobOrder || ! $onlineJobOrder->jocode || ! $onlineJobOrder->jocode->division) {
+                                        if (! $onlineJobOrder || ! $onlineJobOrder->jobOrderCode || ! $onlineJobOrder->jobOrderCode->division) {
                                             return [];
                                         }
 
-                                        $divisionCode = $onlineJobOrder->jocode->division->code;
+                                        $divisionCode = $onlineJobOrder->jobOrderCode->division->code;
 
                                         return User::where('division_id', $divisionCode)
                                             ->get()
@@ -1051,8 +1040,10 @@ class OnlineJobOrderResource extends Resource
                                     ->disabled(),
                                 Forms\Components\TextInput::make('address')
                                     ->required(true)
-                                    ->formatStateUsing(function (OnlineJobOrder $record) {
-                                        return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
+                                    ->formatStateUsing(function (OnlineJobOrder $record) use ($barangayNames, $cityNames) {
+                                        return trim($record->address ?? '')
+                                            . ', ' . ($barangayNames[$record->barangay] ?? 'N/A')
+                                            . ', ' . ($cityNames[$record->town] ?? 'N/A');
                                     })
                                     ->disabled(),
 
@@ -1086,13 +1077,13 @@ class OnlineJobOrderResource extends Resource
                                     ->multiple()
                                     ->options(function (callable $get) {
                                         $joNumber = $get('jo_number');
-                                        $onlineJobOrder = OnlineJobOrder::with('jocode.division')->where('jo_number', $joNumber)->first();
+                                        $onlineJobOrder = OnlineJobOrder::with('jobOrderCode.division')->where('jo_number', $joNumber)->first();
 
-                                        if (! $onlineJobOrder || ! $onlineJobOrder->jocode || ! $onlineJobOrder->jocode->division) {
+                                        if (! $onlineJobOrder || ! $onlineJobOrder->jobOrderCode || ! $onlineJobOrder->jobOrderCode->division) {
                                             return [];
                                         }
 
-                                        $divisionCode = $onlineJobOrder->jocode->division->code;
+                                        $divisionCode = $onlineJobOrder->jobOrderCode->division->code;
 
                                         return User::where('division_id', $divisionCode)
                                             ->get()

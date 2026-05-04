@@ -3,10 +3,11 @@
 namespace App\Filament\Imports;
 
 use App\Models\OnlineJobOrder;
+use Carbon\Carbon;
 use Filament\Actions\Imports\ImportColumn;
 use Filament\Actions\Imports\Importer;
 use Filament\Actions\Imports\Models\Import;
-use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class OnlineJobOrderImporter extends Importer
 {
@@ -21,11 +22,9 @@ class OnlineJobOrderImporter extends Importer
             ImportColumn::make('date_requested')
                 ->requiredMapping()
                 ->rules(['required', 'date'])
-                ->castStateUsing(function ($state){
-                    $state = Carbon::parse($state)->format('Y-m-d H:i:s');
-                    return $state;
-                    })
-                    ,
+                ->castStateUsing(function ($state) {
+                    return Carbon::parse($state)->format('Y-m-d H:i:s');
+                }),
             ImportColumn::make('account_number')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
@@ -48,12 +47,12 @@ class OnlineJobOrderImporter extends Importer
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
             ImportColumn::make('requested_by')
-                ->rules(['max:255']),
+                ->rules(['nullable', 'max:255']),
             ImportColumn::make('contact_number')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
             ImportColumn::make('email')
-                ->rules(['email', 'max:255']),
+                ->rules(['nullable', 'email', 'max:255']),
             ImportColumn::make('mode_received')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
@@ -63,9 +62,21 @@ class OnlineJobOrderImporter extends Importer
             ImportColumn::make('processed_by')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
+            ImportColumn::make('forwarded_by')
+                ->rules(['nullable', 'string', 'max:255']),
+            ImportColumn::make('received_by')
+                ->rules(['nullable', 'string', 'max:255']),
+            ImportColumn::make('dispatched_by')
+                ->rules(['nullable', 'string', 'max:255']),
+            ImportColumn::make('verified_by')
+                ->rules(['nullable', 'string', 'max:255']),
+            ImportColumn::make('accomplishment_processed_by')
+                ->rules(['nullable', 'string', 'max:255']),
+            ImportColumn::make('pad_received_by')
+                ->rules(['nullable', 'string', 'max:255']),
             ImportColumn::make('status')
                 ->requiredMapping()
-                ->rules(['required', 'max:255']),
+                ->rules(['required', Rule::in(['For Forward', 'Forwarded', 'For Dispatch', 'Dispatched', 'Accomplished', 'For Verification', 'Verified', 'Cancel'])]),
             ImportColumn::make('is_online')
                 ->boolean()
                 ->rules(['boolean']),
@@ -74,12 +85,7 @@ class OnlineJobOrderImporter extends Importer
 
     public function resolveRecord(): ?OnlineJobOrder
     {
-        return OnlineJobOrder::firstOrNew([
-            // Update existing records, matching them by `$this->data['column_name']`
-            'jo_number' => $this->data['jo_number'],
-        ]);
-
-        return new OnlineJobOrder();
+        return OnlineJobOrder::firstOrNew(['jo_number' => $this->data['jo_number']]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string

@@ -16,45 +16,36 @@ class UserImporter extends Importer
     {
         return [
             ImportColumn::make('employee_number')
-                ->rules(['max:255']),
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
             ImportColumn::make('name')
                 ->rules(['max:255']),
             ImportColumn::make('first_name')
-                ->rules(['max:255']),
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
             ImportColumn::make('middle_name')
                 ->rules(['max:255']),
             ImportColumn::make('last_name')
-                ->rules(['max:255']),
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
             ImportColumn::make('suffix')
                 ->rules(['max:255']),
             ImportColumn::make('birthday')
-                ->rules(['date']),
-            // ImportColumn::make('division')
-            //     ->rules(['max:255']),
+                ->rules(['nullable', 'date']),
+            ImportColumn::make('division_id')
+                ->rules(['nullable', 'max:255']),
             ImportColumn::make('email')
-                ->rules(['email', 'max:255']),
+                ->rules(['nullable', 'email', 'max:255']),
             ImportColumn::make('mobile_number')
-                ->rules(['max:255']),
+                ->rules(['nullable', 'max:255']),
             ImportColumn::make('address')
-                ->rules(['max:255']),
-            // ImportColumn::make('avatar')
-            //     ->rules(['max:255']),
-            // ImportColumn::make('locale')
-            //     ->rules(['max:255']),
-            ImportColumn::make('is_approved')
-                ->boolean()
-                ->rules(['boolean']),
+                ->rules(['nullable', 'max:255']),
+            // C8 fix: is_approved removed — imported users go through the approval workflow
             ImportColumn::make('email_verified_at')
-                ->rules(['email', 'datetime']),
+                ->rules(['nullable', 'date']), // W-C fix: was ['email', 'datetime'] — always failed
             ImportColumn::make('password')
                 ->requiredMapping()
                 ->rules(['required', 'max:255']),
-            // ImportColumn::make('jo_id')
-            //     ->rules(['max:255']),
-            // ImportColumn::make('prod_id')
-            //     ->rules(['max:255']),
-            // ImportColumn::make('division_id')
-            //     ->rules(['max:255']),
         ];
     }
 
@@ -67,14 +58,10 @@ class UserImporter extends Importer
         return $data;
     }
 
+    // W-B fix: was `return new User()` — re-importing duplicated rows instead of updating
     public function resolveRecord(): ?User
     {
-        // return User::firstOrNew([
-        //     // Update existing records, matching them by `$this->data['column_name']`
-        //     'email' => $this->data['email'],
-        // ]);
-
-        return new User();
+        return User::firstOrNew(['employee_number' => $this->data['employee_number']]);
     }
 
     public static function getCompletedNotificationBody(Import $import): string

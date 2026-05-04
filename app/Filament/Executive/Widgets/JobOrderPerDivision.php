@@ -2,13 +2,14 @@
 
 namespace App\Filament\Executive\Widgets;
 
-use Filament\Tables;
 use App\Models\Division;
+use App\Models\OnlineJobOrder;
 use Carbon\Carbon;
 use Carbon\CarbonInterval;
+use Filament\Tables;
 use Filament\Tables\Table;
-use App\Models\OnlineJobOrder;
 use Filament\Widgets\TableWidget as BaseWidget;
+use Illuminate\Support\Collection;
 
 class JobOrderPerDivision extends BaseWidget
 {
@@ -16,190 +17,196 @@ class JobOrderPerDivision extends BaseWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    public function table(Table $table): Table
+    /**
+     * Load all job-order stats in 2 queries (divisions+jocodes eager load,
+     * then one aggregated SQL), then pass the result collection into the
+     * table as cached view data so no per-row queries are fired.
+     */
+    private function buildStats(): Collection
     {
-        $totals = [
-            'totalJO' => 0,
-            'totalAccomplished' => 0,
-            'totalOngoing' => 0,
-            'avgTATSeconds' => 0,
-            'avgTATReadable' => 'N/A',
-            'totalAccomplishedToday' => 0,
-            'totalOngoingToday' => 0,
-            'totalReceivedToday' => 0,
-        ];
+        $codes = config('mtwd.widget_division_codes');
 
-        $divisions = Division::whereIn('code', ['16', '2016', '2017', '2018', '2021', '2024', '2020'])->get();
+        // Query 1: divisions with their job-order codes (eager loaded)
+        $divisions = Division::whereIn('code', $codes)
+            ->with('jocodes')
+            ->get();
 
-        $totalSeconds = 0;
-        $count = 0;
+        // Map division → its JO codes
+        $divisionJoCodes = $divisions->mapWithKeys(
+            fn (Division $d) => [$d->id => $d->jocodes->pluck('code')]
+        );
 
-        foreach ($divisions as $division) {
-            $jobOrderCodes = $division->jocodes()->pluck('code');
+        $allJoCodes = $divisionJoCodes->flatten()->unique()->values();
 
-            $joCount = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)->count();
-            $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
-                ->whereIn('job_order_code', $jobOrderCodes)->count();
-            $ongoing = OnlineJobOrder::whereNull('date_accomplished')
-                ->whereIn('job_order_code', $jobOrderCodes)->count();
+        if ($allJoCodes->isEmpty()) {
+            return $divisions->map(fn (Division $d) => $this->emptyRow($d));
+        }
 
-            $totals['totalJO'] += $joCount;
-            $totals['totalAccomplished'] += $accomplished;
-            $totals['totalOngoing'] += $ongoing;
+        $today = Carbon::today()->toDateString();
 
-            // Calculate TAT per job and sum seconds
-            $tatJobs = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                ->whereNotNull('date_requested')
-                ->whereNotNull('date_accomplished')
-                ->get(['date_requested', 'date_accomplished']);
+        // Query 2: single aggregated query covering every stat for every JO code
+        $rawStats = OnlineJobOrder::whereIn('job_order_code', $allJoCodes)
+            ->selectRaw("
+                job_order_code,
+                COUNT(*) AS total,
+                SUM(date_accomplished IS NOT NULL) AS accomplished,
+                SUM(date_accomplished IS NULL) AS ongoing,
+                SUM(DATE(date_requested) = ?) AS received_today,
+                SUM(DATE(date_accomplished) = ?) AS accomplished_today,
+                SUM(date_accomplished IS NULL AND DATE(date_requested) = ?) AS ongoing_today,
+                SUM(TIMESTAMPDIFF(SECOND, date_requested, date_accomplished)) AS total_seconds,
+                SUM(date_accomplished IS NOT NULL AND date_requested IS NOT NULL) AS tat_count
+            ", [$today, $today, $today])
+            ->groupBy('job_order_code')
+            ->get()
+            ->keyBy('job_order_code');
 
-            foreach ($tatJobs as $job) {
-                $start = Carbon::parse($job->date_requested);
-                $end = Carbon::parse($job->date_accomplished);
-                $diff = $start->diffInSeconds($end);
-                $totalSeconds += $diff;
-                $count++;
+        // Aggregate per-division from the already-loaded in-memory result
+        return $divisions->map(function (Division $division) use ($divisionJoCodes, $rawStats) {
+            $joCodes = $divisionJoCodes[$division->id] ?? collect();
+
+            $total           = 0;
+            $accomplished    = 0;
+            $ongoing         = 0;
+            $receivedToday   = 0;
+            $accomplishedToday = 0;
+            $ongoingToday    = 0;
+            $totalSeconds    = 0;
+            $tatCount        = 0;
+
+            foreach ($joCodes as $code) {
+                $row = $rawStats->get($code);
+                if (! $row) continue;
+
+                $total             += (int) $row->total;
+                $accomplished      += (int) $row->accomplished;
+                $ongoing           += (int) $row->ongoing;
+                $receivedToday     += (int) $row->received_today;
+                $accomplishedToday += (int) $row->accomplished_today;
+                $ongoingToday      += (int) $row->ongoing_today;
+                $totalSeconds      += (int) $row->total_seconds;
+                $tatCount          += (int) $row->tat_count;
             }
 
-            $accomplishedToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                ->whereDate('date_accomplished', Carbon::today())
-                ->count();
+            $avgTat = $tatCount > 0
+                ? CarbonInterval::seconds($totalSeconds / $tatCount)->cascade()->forHumans(['parts' => 2, 'join' => true])
+                : 'N/A';
 
-            $ongoingToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                ->whereNull('date_accomplished')
-                ->whereDate('date_requested', Carbon::today())
-                ->count();
+            return (object) [
+                'division'           => $division,
+                'total'              => $total,
+                'accomplished'       => $accomplished,
+                'ongoing'            => $ongoing,
+                'receivedToday'      => $receivedToday,
+                'accomplishedToday'  => $accomplishedToday,
+                'ongoingToday'       => $ongoingToday,
+                'totalSeconds'       => $totalSeconds,
+                'tatCount'           => $tatCount,
+                'avgTat'             => $avgTat,
+            ];
+        });
+    }
 
-            $receivedToday = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                ->whereDate('date_requested', Carbon::today())
-                ->count();
+    private function emptyRow(Division $division): object
+    {
+        return (object) [
+            'division'           => $division,
+            'total'              => 0,
+            'accomplished'       => 0,
+            'ongoing'            => 0,
+            'receivedToday'      => 0,
+            'accomplishedToday'  => 0,
+            'ongoingToday'       => 0,
+            'totalSeconds'       => 0,
+            'tatCount'           => 0,
+            'avgTat'             => 'N/A',
+        ];
+    }
 
-            $totals['totalAccomplishedToday'] += $accomplishedToday;
-            $totals['totalOngoingToday'] += $ongoingToday;
-            $totals['totalReceivedToday'] += $receivedToday;
-        }
+    public function table(Table $table): Table
+    {
+        $stats = $this->buildStats();
 
-        if ($count > 0) {
-            $avgSeconds = $totalSeconds / $count;
-            $totals['avgTATSeconds'] = round($avgSeconds);
-            $totals['avgTATReadable'] = CarbonInterval::seconds($avgSeconds)
-                ->cascade()
-                ->forHumans(['parts' => 2, 'join' => true]);
-        }
+        // Footer totals — computed from already-loaded PHP objects (no extra queries)
+        $totals = [
+            'totalJO'               => $stats->sum('total'),
+            'totalAccomplished'     => $stats->sum('accomplished'),
+            'totalOngoing'          => $stats->sum('ongoing'),
+            'totalReceivedToday'    => $stats->sum('receivedToday'),
+            'totalAccomplishedToday'=> $stats->sum('accomplishedToday'),
+            'totalOngoingToday'     => $stats->sum('ongoingToday'),
+        ];
+
+        $globalTatCount   = $stats->sum('tatCount');
+        $globalTatSeconds = $stats->sum('totalSeconds');
+        $totals['avgTATReadable'] = $globalTatCount > 0
+            ? CarbonInterval::seconds($globalTatSeconds / $globalTatCount)->cascade()->forHumans(['parts' => 2, 'join' => true])
+            : 'N/A';
+
+        // Index stats by division id for O(1) lookup in getStateUsing
+        $statsByDivisionId = $stats->keyBy(fn ($s) => $s->division->id);
 
         return $table
-            ->query(
-                Division::whereIn('code', ['16', '2016', '2017', '2018', '2021', '2024', '2020'])
-            )
+            ->query(Division::whereIn('code', config('mtwd.widget_division_codes')))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                ->label('Division Name')
-                ->wrap(),
+                    ->label('Division Name')
+                    ->wrap(),
+
                 Tables\Columns\TextColumn::make('receivedToday')
                     ->label('Received Today')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                            ->whereDate('date_requested', Carbon::today())
-                            ->count();
-                    }),
+                    ->getStateUsing(fn (Division $record) =>
+                        $statsByDivisionId[$record->id]?->receivedToday ?? 0
+                    ),
+
                 Tables\Columns\TextColumn::make('accomplishedToday')
                     ->label('Accomplished Today')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                            ->whereDate('date_accomplished', Carbon::today())
-                            ->count();
-                    }),
+                    ->getStateUsing(fn (Division $record) =>
+                        $statsByDivisionId[$record->id]?->accomplishedToday ?? 0
+                    ),
 
                 Tables\Columns\TextColumn::make('ongoingToday')
                     ->label('Ongoing Today')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        return OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                            ->whereNull('date_accomplished')
-                            ->whereDate('date_requested', Carbon::today())
-                            ->count();
-                    }),
+                    ->getStateUsing(fn (Division $record) =>
+                        $statsByDivisionId[$record->id]?->ongoingToday ?? 0
+                    ),
+
                 Tables\Columns\TextColumn::make('totalJO')
                     ->label('Total Received')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        return number_format(OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)->count());
-                    }),
+                    ->getStateUsing(fn (Division $record) =>
+                        number_format($statsByDivisionId[$record->id]?->total ?? 0)
+                    ),
+
                 Tables\Columns\TextColumn::make('totalAccomplished')
                     ->label('Total Accomplished')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
-                            ->whereIn('job_order_code', $jobOrderCodes)->count();
-
-                        return number_format($accomplished);
+                    ->getStateUsing(function (Division $record) use ($statsByDivisionId) {
+                        $row = $statsByDivisionId[$record->id] ?? null;
+                        return number_format($row?->accomplished ?? 0);
                     })
-                    ->description(function (Division $record): string {
-                        $total = OnlineJobOrder::whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
-
-                        if ($total === 0) {
-                            return '0%';
-                        }
-
-                        $accomplished = OnlineJobOrder::whereNotNull('date_accomplished')
-                            ->whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
-
-                        return round(($accomplished / $total) * 100, 2) . '%';
+                    ->description(function (Division $record) use ($statsByDivisionId): string {
+                        $row = $statsByDivisionId[$record->id] ?? null;
+                        if (! $row || $row->total === 0) return '0%';
+                        return round(($row->accomplished / $row->total) * 100, 2) . '%';
                     }, position: 'below'),
+
                 Tables\Columns\TextColumn::make('totalOngoing')
                     ->label('Total Ongoing')
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-                        $ongoing = OnlineJobOrder::whereNull('date_accomplished')
-                            ->whereIn('job_order_code', $jobOrderCodes)->count();
-
-                        return number_format($ongoing);
+                    ->getStateUsing(function (Division $record) use ($statsByDivisionId) {
+                        $row = $statsByDivisionId[$record->id] ?? null;
+                        return number_format($row?->ongoing ?? 0);
                     })
-                    ->description(function (Division $record): string {
-                        $total = OnlineJobOrder::whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
-
-                        if ($total === 0) {
-                            return '0%';
-                        }
-
-                        $accomplished = OnlineJobOrder::whereNull('date_accomplished')
-                            ->whereIn('job_order_code', $record->jocodes()->pluck('code'))->count();
-
-                        return round(($accomplished / $total) * 100, 2) . '%';
+                    ->description(function (Division $record) use ($statsByDivisionId): string {
+                        $row = $statsByDivisionId[$record->id] ?? null;
+                        if (! $row || $row->total === 0) return '0%';
+                        return round(($row->ongoing / $row->total) * 100, 2) . '%';
                     }, position: 'below'),
+
                 Tables\Columns\TextColumn::make('avgTAT')
                     ->label('Avg TAT')
                     ->wrap()
-                    ->getStateUsing(function (Division $record) {
-                        $jobOrderCodes = $record->jocodes()->pluck('code');
-
-                        $jobs = OnlineJobOrder::whereIn('job_order_code', $jobOrderCodes)
-                            ->whereNotNull('date_requested')
-                            ->whereNotNull('date_accomplished')
-                            ->get(['date_requested', 'date_accomplished']);
-
-                        $total = 0;
-                        $count = 0;
-
-                        foreach ($jobs as $job) {
-                            $start = Carbon::parse($job->date_requested);
-                            $end = Carbon::parse($job->date_accomplished);
-                            $total += $start->diffInSeconds($end);
-                            $count++;
-                        }
-
-                        if ($count === 0) {
-                            return 'N/A';
-                        }
-
-                        $avg = $total / $count;
-
-                        return CarbonInterval::seconds($avg)
-                            ->cascade()
-                            ->forHumans(['parts' => 2, 'join' => true]);
-                    }),
+                    ->getStateUsing(fn (Division $record) =>
+                        $statsByDivisionId[$record->id]?->avgTat ?? 'N/A'
+                    ),
             ])
             ->paginated(false)
             ->contentFooter(view('table.footer', ['totals' => $totals]));

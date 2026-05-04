@@ -22,22 +22,6 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         ->logFillable();
     }
 
-    // protected $casts = [
-    //     'dispatched' => 'array',
-    // ];
-
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-        'date_forwarded',
-        'date_received',
-        'date_dispatched',
-        'date_accomplished',
-        'date_verified',
-        'date_returned',
-    ];
-
     protected $fillable = [
         'jo_number',
         'date_requested',
@@ -83,8 +67,14 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
     protected function casts(): array
     {
         return [
-            'is_synced' => 'boolean',
-            'is_online' => 'boolean',
+            'is_synced'         => 'boolean',
+            'is_online'         => 'boolean',
+            'date_forwarded'    => 'datetime',
+            'date_received'     => 'datetime',
+            'date_dispatched'   => 'datetime',
+            'date_accomplished' => 'datetime',
+            'date_verified'     => 'datetime',
+            'date_returned'     => 'datetime',
         ];
     }
 
@@ -92,11 +82,6 @@ class OnlineJobOrder extends Model implements HasAllowedFilters
         'location',
     ];
 
-
-    public function jocode()
-    {
-        return $this->belongsTo(JobOrderCode::class, 'job_order_code', 'code');
-    }
 
     public function account()
     {

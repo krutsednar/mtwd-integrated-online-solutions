@@ -23,45 +23,48 @@ Route::redirect('/login', url('home/login'));
 
 
 
-Route::get('/executive/job-order/{id}', function ($id) {
-    $order = OnlineJobOrder::with('jobOrderCode.division')
-        ->findOrFail($id);
+Route::middleware(['auth', 'role:Executive|super_admin'])->group(function () {
+    Route::get('/executive/job-order/{id}', function ($id) {
+        $order = OnlineJobOrder::with('jobOrderCode.division')
+            ->findOrFail($id);
 
-    $total = 1;
-    $previousDescriptions = [];
+        abort_unless(auth()->user()->can('view', $order), 403);
 
-    if ($order->account_number) {
-        $allOrders = OnlineJobOrder::where('account_number', $order->account_number)
-            ->where('id', '!=', $order->id)
-            ->with('jobOrderCode')
-            ->get();
+        $total = 1;
+        $previousDescriptions = [];
 
-        $total = $allOrders->count() + 1;
-        $previousDescriptions = $allOrders
-            ->pluck('jobOrderCode.description')
-            ->filter()
-            ->unique()
-            ->values()
-            ->toArray();
-    }
+        if ($order->account_number) {
+            $allOrders = OnlineJobOrder::where('account_number', $order->account_number)
+                ->where('id', '!=', $order->id)
+                ->with('jobOrderCode')
+                ->get();
 
-    return response()->json([
-        'id' => $order->id,
-        'lat' => $order->lat,
-        'lng' => $order->lng,
-        'date_requested' => Carbon::parse($order->date_requested)->format('F d, Y'),
-        'jo_number' => $order->jo_number,
-        'requested_by' => $order->requested_by,
-        'meter_number' => $order->meter_number,
-        'registered_name' => $order->registered_name,
-        'address' => $order->address,
-        'status' => $order->status,
-        'account_number' => $order->account_number,
-        'jobOrderCode' => $order->jobOrderCode,
-        'division' => $order->jobOrderCode->division,
-        'total' => $total,
-        'previous_descriptions' => $previousDescriptions,
-    ]);
-})
-->middleware(['auth']);
+            $total = $allOrders->count() + 1;
+            $previousDescriptions = $allOrders
+                ->pluck('jobOrderCode.description')
+                ->filter()
+                ->unique()
+                ->values()
+                ->toArray();
+        }
+
+        return response()->json([
+            'id'                   => $order->id,
+            'lat'                  => $order->lat,
+            'lng'                  => $order->lng,
+            'date_requested'       => Carbon::parse($order->date_requested)->format('F d, Y'),
+            'jo_number'            => $order->jo_number,
+            'requested_by'         => $order->requested_by,
+            'meter_number'         => $order->meter_number,
+            'registered_name'      => $order->registered_name,
+            'address'              => $order->address,
+            'status'               => $order->status,
+            'account_number'       => $order->account_number,
+            'jobOrderCode'         => $order->jobOrderCode,
+            'division'             => $order->jobOrderCode?->division,
+            'total'                => $total,
+            'previous_descriptions'=> $previousDescriptions,
+        ]);
+    });
+});
 require __DIR__.'/auth.php';

@@ -106,22 +106,19 @@ class UserResource extends Resource
                 Tables\Actions\Action::make('attachRole')
                 ->badge()
                 ->label('Attach User Role')
-                // ->icon()
+                ->requiresConfirmation()
+                ->modalHeading('Assign panel_user Role')
+                ->modalDescription(function () {
+                    $count = User::whereDoesntHave('roles')->count();
+                    return "This will assign the panel_user role to {$count} user(s) who currently have no role. Continue?";
+                })
+                ->modalSubmitActionLabel('Yes, assign role')
                 ->action(function () {
                     $role = Role::where('name', 'panel_user')->first();
 
-                    // if (! $role) {
-                    //     filament()->notify('danger', 'Role "panel_user" does not exist.');
-                    //     return;
-                    // }
-
-                    // Get all users who don't already have the "panel_user" role
-                    User::whereDoesntHave('roles', function ($query) use ($role) {
-                        $query->where('name', $role->name);
-                    })->get()->each(function ($user) use ($role) {
+                    User::whereDoesntHave('roles')->get()->each(function ($user) use ($role) {
                         $user->assignRole($role);
                     });
-
                 }),
             ])
             ->columns([
@@ -185,7 +182,11 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete selected records?')
+                        ->modalDescription('This action is permanent and cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete permanently'),
                 ]),
             ]);
     }
@@ -195,6 +196,14 @@ class UserResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                \Illuminate\Database\Eloquent\SoftDeletingScope::class,
+            ]);
     }
 
     public static function getPages(): array

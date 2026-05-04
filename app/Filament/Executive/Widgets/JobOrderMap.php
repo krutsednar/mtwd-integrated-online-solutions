@@ -49,11 +49,15 @@ class JobOrderMap extends MapTableWidget
 
     protected function getTableQuery(): Builder
 	{
-		return \App\Models\OnlineJobOrder::with('jocode')->whereNotNull('lat')->whereNull('date_accomplished')->latest();
+		return \App\Models\OnlineJobOrder::with('jobOrderCode')->whereNotNull('lat')->whereNull('date_accomplished')->latest();
 	}
 
 	protected function getTableColumns(): array
 	{
+        $barangayNames   = \App\Models\Barangay::pluck('name', 'id');
+        $cityNames       = \App\Models\City::pluck('name', 'id');
+        $usernamesByCode = \App\Models\Username::pluck('name', 'code');
+
 		return [
                 // Tables\Columns\TextColumn::make('lat')
                 // ->searchable(),
@@ -91,33 +95,33 @@ class JobOrderMap extends MapTableWidget
                 // ->searchable(),
                 // Tables\Columns\TextColumn::make('meter_number')
                 // ->searchable(),
-                // Tables\Columns\TextColumn::make('jocode.description')
+                // Tables\Columns\TextColumn::make('jobOrderCode.description')
                 // ->label('JO Type')
                 // ->searchable(),
-                Tables\Columns\TextColumn::make('jocode.category.name')
+                Tables\Columns\TextColumn::make('jobOrderCode.category.name')
                 ->label('Category')
                 ->description(function (OnlineJobOrder $record) {
-                    return $record->jocode->description;
+                    return $record->jobOrderCode->description;
                 })
                 ->wrap()
                  ->searchable(query: function ($query, $search) {
-                    $query->orWhereHas('jocode', function ($subQuery) use ($search) {
+                    $query->orWhereHas('jobOrderCode', function ($subQuery) use ($search) {
                         $subQuery->where('description', 'like', "%{$search}%");
                     });
                 }),
-                // Tables\Columns\TextColumn::make('jocode.description')
+                // Tables\Columns\TextColumn::make('jobOrderCode.description')
                 // ->label('Type')
                 // ->hidden()
                 // ->searchable(),
-                 Tables\Columns\TextColumn::make('jocode.division.name')
+                 Tables\Columns\TextColumn::make('jobOrderCode.division.name')
                 ->label('Division')
                 ->searchable()
                 ->wrap(),
                 Tables\Columns\TextColumn::make('address')
                 ->searchable()
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
-                })
+                ->getStateUsing(fn ($r) =>
+                    trim($r->address ?? '') . ', ' . ($barangayNames[$r->barangay] ?? 'N/A') . ', ' . ($cityNames[$r->town] ?? 'N/A')
+                )
                 // ->wrap()
                 ->limit(20)
                 ->tooltip(function (TextColumn $column): ?string {
@@ -164,7 +168,7 @@ class JobOrderMap extends MapTableWidget
             ->placeholder('All Divisions')
             ->query(function ($query, array $data) {
                 if (filled($data['value'])) {
-                    $query->whereHas('jocode.division', function ($q) use ($data) {
+                    $query->whereHas('jobOrderCode.division', function ($q) use ($data) {
                         $q->where('id', $data['value']);
                     });
                 }
@@ -178,7 +182,7 @@ class JobOrderMap extends MapTableWidget
             ->placeholder('All Categories')
             ->query(function ($query, array $data) {
                 if (filled($data['value'])) {
-                    $query->whereHas('jocode.category', function ($q) use ($data) {
+                    $query->whereHas('jobOrderCode.category', function ($q) use ($data) {
                         $q->where('id', $data['value']);
                     });
                 }
@@ -188,6 +192,10 @@ class JobOrderMap extends MapTableWidget
 
 	protected function getTableActions(): array
 	{
+        $barangayNames   = \App\Models\Barangay::pluck('name', 'id');
+        $cityNames       = \App\Models\City::pluck('name', 'id');
+        $usernamesByCode = \App\Models\Username::pluck('name', 'code');
+
 		return [
 			Tables\Actions\ViewAction::make()
             ->slideOver()
@@ -200,29 +208,25 @@ class JobOrderMap extends MapTableWidget
     ])
     ->schema([
             TextEntry::make('jo_number')->label('JO Number'),
-                // TextEntry::make('jocode.description')->label('Ty[e'),
+                // TextEntry::make('jobOrderCode.description')->label('Ty[e'),
                 TextEntry::make('date_requested')
                 ->dateTime(),
-                TextEntry::make('jocode.description')->label('JO Type'),
-                TextEntry::make('jocode.category.name')->label('Category'),
-                TextEntry::make('jocode.division.name')->label('Division'),
+                TextEntry::make('jobOrderCode.description')->label('JO Type'),
+                TextEntry::make('jobOrderCode.category.name')->label('Category'),
+                TextEntry::make('jobOrderCode.division.name')->label('Division'),
                 TextEntry::make('requested_by'),
                 TextEntry::make('contact_number'),
                 TextEntry::make('account_number'),
                 TextEntry::make('registered_name'),
                 TextEntry::make('meter_number'),
                 TextEntry::make('address')
-                ->getStateUsing(function (OnlineJobOrder $record) {
-                    return $record->address.', '.Barangay::where('id', $record->barangay)->value('name').', '.City::where('id', $record->town)->value('name');
-                }),
-                // TextEntry::make('barangay')
-                //     ->getStateUsing(fn (OnlineJobOrder $record) =>
-                //         DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A'),
-
+                ->getStateUsing(fn ($r) =>
+                    trim($r->address ?? '') . ', ' . ($barangayNames[$r->barangay] ?? 'N/A') . ', ' . ($cityNames[$r->town] ?? 'N/A')
+                ),
                 // TextEntry::make('contact_number'),
                 TextEntry::make('processed_by')
                     ->getStateUsing(fn (OnlineJobOrder $record) =>
-                        Username::where('code', $record->processed_by)->value('name') ?? ''),
+                        $usernamesByCode[$record->processed_by] ?? ''),
                 TextEntry::make('status'),
         // ...
     ])
@@ -264,7 +268,7 @@ class JobOrderMap extends MapTableWidget
                 'label'     => view(
                         'widgets.job-order-label',
                         [
-                            'jobOrderDescription'   => $location->jocode?->description,
+                            'jobOrderDescription'   => $location->jobOrderCode?->description,
                             'jobOrderAccount' => $location->account_number,
                             // 'jobOrderIcon' => $location->icon,
                             'jobOrderStatus' => $location->status,
@@ -281,26 +285,29 @@ class JobOrderMap extends MapTableWidget
 
 	public function markerAction(): Action
 	{
+        $barangayNames   = \App\Models\Barangay::pluck('name', 'id');
+        $usernamesByCode = \App\Models\Username::pluck('name', 'code');
+
 		return Action::make('markerAction')
 			->label('Details')
 			->infolist([
 				Card::make([
-                    TextEntry::make('jocode.description')
+                    TextEntry::make('jobOrderCode.description')
                         ->label('Description'),
                     TextEntry::make('date_requested'),
 					TextEntry::make('account_number'),
                     TextEntry::make('address'),
                     TextEntry::make('barangay')
-                        ->getStateUsing(function (OnlineJobOrder $record) {
-                        return DB::connection('kitdb')->table('barangays')->where('id', $record->barangay)->value('name') ?? 'N/A';
-                        }),
+                        ->getStateUsing(fn (OnlineJobOrder $record) =>
+                            $barangayNames[$record->barangay] ?? 'N/A'
+                        ),
                     TextEntry::make('requested_by'),
 
 					TextEntry::make('contact_number'),
                     TextEntry::make('processed_by')
-                        ->getStateUsing(function (OnlineJobOrder $record) {
-                            return Username::where('code', $record->processed_by)->value('name') ?? '';
-                        }),
+                        ->getStateUsing(fn (OnlineJobOrder $record) =>
+                            $usernamesByCode[$record->processed_by] ?? ''
+                        ),
 					TextEntry::make('status'),
 
 				])
