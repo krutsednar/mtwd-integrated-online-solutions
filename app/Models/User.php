@@ -2,7 +2,7 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Panel;
 use Spatie\Activitylog\LogOptions;
 use Spatie\Permission\Traits\HasRoles;
@@ -12,6 +12,9 @@ use Spatie\Activitylog\Traits\LogsActivity;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Namu\WireChat\Traits\Chatable;
+use Carbon\Carbon;
+use Illuminate\Support\Facades\Storage;
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -27,13 +30,6 @@ class User extends Authenticatable implements FilamentUser
         ->logFillable();
     }
 
-    protected $dates = [
-        'birthday',
-        'email_verified_at',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
 
     /**
      * The attributes that are mass assignable.
@@ -48,13 +44,15 @@ class User extends Authenticatable implements FilamentUser
         'last_name',
         'suffix',
         'birthday',
-        'division',
+        'division_id',
         'email',
         'mobile_number',
         'address',
         'password',
-        'locale',
+        'avatar',
         'is_approved',
+        'jo_id',
+        'prod_id',
     ];
 
     /**
@@ -75,21 +73,39 @@ class User extends Authenticatable implements FilamentUser
     protected function casts(): array
     {
         return [
+            'birthday'          => 'date',
             'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'is_approved' => 'boolean',
+            'created_at'        => 'datetime',
+            'updated_at'        => 'datetime',
+            'deleted_at'        => 'datetime',
+            'password'          => 'hashed',
+            'is_approved'       => 'boolean',
         ];
     }
 
     public function canAccessPanel(Panel $panel): bool
     {
         // return str_ends_with($this->email, '@yourdomain.com') && $this->hasVerifiedEmail();
-        return $this->hasVerifiedEmail() && $this->is_approved;
+        // return $this->hasVerifiedEmail() && $this->is_approved;
+        if ($panel->getId() === 'executive') {
+            return $this->hasRole('Executive') && $this->is_approved;
+        }
+
+        if ($panel->getId() === 'MOJO') {
+            return $this->hasAnyRole(['Super Admin', 'Executive', 'Mojo Admin', 'Mojo User', 'Mojo View', 'Mojo Supervisor', 'panel_user']) && $this->is_approved;
+        }
+
+        if ($panel->getId() === 'MCIS') {
+            return $this->hasAnyRole(['Super Admin', 'Executive', 'Mcis Admin']) && $this->is_approved;
+        }
+
+        return $this->is_approved;
     }
 
     public function canCreateChats(): bool
     {
-        return $this->hasVerifiedEmail() && $this->is_approved;
+        // return $this->hasVerifiedEmail() && $this->is_approved;
+        return  $this->is_approved;
     }
 
     protected static function booted(): void
@@ -98,4 +114,20 @@ class User extends Authenticatable implements FilamentUser
             $user->is_approved = false;
         });
     }
+
+    public function getFilamentAvatarUrl(): ?string
+    {
+        return $this->avatar ? Storage::url($this->avatar) : null;
+    }
+
+    public function division()
+    {
+        return $this->belongsTo(Division::class, 'division_id', 'code');
+    }
+
+    public function getFullNameAttribute()
+    {
+        return trim("{$this->first_name} {$this->last_name}");
+    }
+
 }

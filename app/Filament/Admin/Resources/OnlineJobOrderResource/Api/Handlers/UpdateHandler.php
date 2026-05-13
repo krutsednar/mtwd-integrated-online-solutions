@@ -30,11 +30,9 @@ class UpdateHandler extends Handlers {
     {
         $jo_number = $request->route('jo_number');
 
-        $model = static::getModel()::find($jo_number);
+        $model = static::getModel()::where('jo_number', $jo_number)->firstOrFail();
 
-        if (!$model) return static::sendNotFoundResponse();
-
-        $model->fill($request->all());
+        $model->fill($request->validated());
 
         $model->save();
 

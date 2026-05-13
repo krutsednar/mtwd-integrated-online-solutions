@@ -2,12 +2,19 @@
 
 namespace App\Providers;
 
+use Filament\Facades\Filament;
+use App\Filament\Pages\Profile;
 use Filament\View\PanelsRenderHook;
+use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\URL;
+use App\Http\Responses\LoginResponse;
 use Illuminate\Support\Facades\Blade;
 use App\Http\Responses\LogoutResponse;
 use Illuminate\Support\ServiceProvider;
+use Filament\Notifications\Notification;
 use BezhanSalleh\PanelSwitch\PanelSwitch;
 use Filament\Support\Facades\FilamentView;
+use Filament\Http\Responses\Auth\Contracts\LoginResponse as LoginResponseContract;
 use Filament\Http\Responses\Auth\Contracts\LogoutResponse as LogoutResponseContract;
 
 class AppServiceProvider extends ServiceProvider
@@ -18,6 +25,8 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(LogoutResponseContract::class, LogoutResponse::class);
+        $this->app->singleton(LoginResponseContract::class, LoginResponse::class);
+
     }
 
     /**
@@ -25,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+
+
+        if (config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
+
         PanelSwitch::configureUsing(function (PanelSwitch $panelSwitch) {
             $panelSwitch->panels([
                 'home',
@@ -37,9 +52,9 @@ class AppServiceProvider extends ServiceProvider
                 // 'admin',
 
             ])
-            ->visible(fn (): bool => auth()->user()?->hasAnyRole([
-                'super_admin',
-            ]))
+            // ->visible(fn (): bool => auth()->user()?->hasAnyRole([
+            //     'super_admin',
+            // ]))
             // ->heading('MTWD Online Information Systems')
             ->modalWidth('sm')
             ->slideOver()
@@ -64,9 +79,28 @@ class AppServiceProvider extends ServiceProvider
         });
 
         FilamentView::registerRenderHook(
+            PanelsRenderHook::SIDEBAR_NAV_START,
+            fn (): string => Blade::render(
+                <<<'BLADE'
+                    @livewire('panel-title', ['panelId' => $panelId])
+                BLADE,
+                ['panelId' => Filament::getCurrentPanel()->getId()]
+            ),
+        );
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SCRIPTS_AFTER,
+            // fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
+            fn (): View => view('filament.scripts.geolocation'),
+        );
+        FilamentView::registerRenderHook(
             PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
             fn (): string => Blade::render('@livewire(\'buttons.messenger\')'),
-            // return '<button class="btn btn-primary">Custom Button</button>',
         );
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SIDEBAR_FOOTER,
+            fn (): string => Blade::render('@livewire(\'buttons.logout\')'),
+        );
+
     }
 }

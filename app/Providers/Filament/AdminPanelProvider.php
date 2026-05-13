@@ -6,6 +6,7 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
 use App\Livewire\LoginRedirect;
 use Filament\Support\Colors\Color;
 use Illuminate\Support\Facades\Blade;
@@ -16,6 +17,7 @@ use Rmsramos\Activitylog\ActivitylogPlugin;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -31,10 +33,13 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverResources(in: app_path('Filament/Admin/Resources'), for: 'App\\Filament\\Admin\\Resources')
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\\Filament\\Admin\\Pages')
             ->pages([
@@ -58,7 +63,7 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->plugins([
                 \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
-                ApiServicePlugin::make(),
+                // ApiServicePlugin::make(),
                 ActivitylogPlugin::make()
                 ->navigationGroup('User Management')
                 ->navigationIcon('mdi-shield-account-outline')
@@ -78,7 +83,7 @@ class AdminPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ]);
+                    ]);
 
     }
 }

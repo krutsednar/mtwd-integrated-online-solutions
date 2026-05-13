@@ -5,15 +5,19 @@ namespace App\Filament\Admin\Resources;
 use Filament\Forms;
 use App\Models\User;
 use Filament\Tables;
+use App\Models\Division;
 use Filament\Forms\Form;
 use Filament\Tables\Table;
 use Filament\Resources\Resource;
 use Illuminate\Support\Facades\Hash;
+use App\Filament\Imports\UserImporter;
+use Filament\Tables\Actions\ImportAction;
 use Filament\Tables\Columns\ToggleColumn;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Filament\Admin\Resources\UserResource\Pages;
 use App\Filament\Admin\Resources\UserResource\RelationManagers;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -51,56 +55,39 @@ class UserResource extends Resource
                     ->required()
                     ->label('Username (ex: ICTD-Kurt'),
                 Forms\Components\DatePicker::make('birthday')
-                ->required()
-                ->format('m/d/Y'),
-                Forms\Components\Select::make('division')
-                    ->options([
-                        'OGM'     => 'Office of the General Manager',
-                        'OBOD'     => 'Office of the Board of Directors',
-                        'OAGM-TSO'  => 'Office of the Assistant General Manager for Technical Services and Operations',
-                        // 'OAGM-FA'  => 'Office of the Assistant General Manager for Finance and Administration',
-                        'AFD' => 'Administration and Finance Department',
-                        'TSOD'        => 'Technical Services and Operations Department',
-                        'CPPAD'     => 'Corporate Planning and Public Affairs Division',
-                        'ICSD'     => 'Internal Control and System Development Division',
-                        'LD'   => 'Legal Division',
-                        'ICTD'    => 'Information and Communication Division',
-                        'HRD'    => 'Human Resource Department',
-                        'GSD'  => 'General Service Division',
-                        'PMMD'  => 'Property and Material Management Division',
-                        'ACTD'    => 'Accounting Division',
-                        'CSD'     => 'Customer Service Division',
-                        'COMMD'    => 'Commercial Division',
-                        'ED'   => 'Engineering Division',
-                        'COD'     => 'Construction Division',
-                        'EWRD'    => 'Environment and Water Resources Division',
-                        'PROD'    => 'Production Division',
-                        'PAMD'     => 'Pipeline and Appurtenances Maintenance Division',
-                        // 'WQS'    => 'Water Quality Section',
-                        // 'TAB'     => 'Treasury and Budget Section',
-                        // 'BAC'       => 'Bids and Awards Committee',
-                        // 'WHS'       => 'Warehouse Section',
-                    ])
+                        ->displayFormat('F d, Y')
+                        ->native(false),
+                Forms\Components\Select::make('division_id')
+                    ->label('Division')
+                    ->options(function () {
+                        return Division::orderBy('name')->pluck('name', 'code')->toArray();
+                    })
+                    ->searchable()
                     ->required(),
                 Forms\Components\TextInput::make('email')
-                    ->email()
-                    ->required(),
+                    ->email(),
                 Forms\Components\TextInput::make('mobile_number')
-                    ->length(10)
+                    ->maxLength(10)
                     ->numeric()
-                    ->prefix('+63')
-                    ->required(),
+                    ->prefix('+63'),
                 Forms\Components\TextInput::make('address')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('jo_id')
+                    ->maxLength(255)
+                    ->default(null),
+                Forms\Components\TextInput::make('prod_id')
                     ->maxLength(255)
                     ->default(null),
                 Forms\Components\TextInput::make('avatar')
                     ->maxLength(255)
                     ->default(null),
-                Forms\Components\TextInput::make('locale')
-                    ->maxLength(255)
-                    ->default(null),
+                 Forms\Components\Select::make('roles')
+                    ->relationship('roles', 'name')
+                    ->multiple()
+                    ->preload()
+                    ->searchable(),
                 Forms\Components\Toggle::make('is_approved'),
-                Forms\Components\DateTimePicker::make('email_verified_at'),
                 Forms\Components\TextInput::make('password')
                     ->password()
                     ->afterStateHydrated(function (Forms\Components\TextInput $component, $state) {
@@ -115,10 +102,31 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->headerActions([
+                Tables\Actions\Action::make('attachRole')
+                ->badge()
+                ->label('Attach User Role')
+                ->requiresConfirmation()
+                ->modalHeading('Assign panel_user Role')
+                ->modalDescription(function () {
+                    $count = User::whereDoesntHave('roles')->count();
+                    return "This will assign the panel_user role to {$count} user(s) who currently have no role. Continue?";
+                })
+                ->modalSubmitActionLabel('Yes, assign role')
+                ->action(function () {
+                    $role = Role::where('name', 'panel_user')->first();
+
+                    User::whereDoesntHave('roles')->get()->each(function ($user) use ($role) {
+                        $user->assignRole($role);
+                    });
+                }),
+            ])
             ->columns([
                 Tables\Columns\TextColumn::make('employee_number')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('name')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('roles.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('first_name')
                     ->searchable(),
@@ -131,7 +139,9 @@ class UserResource extends Resource
                 Tables\Columns\TextColumn::make('birthday')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('division')
+                // Tables\Columns\TextColumn::make('division')
+                //     ->searchable(),
+                Tables\Columns\TextColumn::make('division.name')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('email')
                     ->searchable(),
@@ -141,12 +151,16 @@ class UserResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('avatar')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('locale')
-                    ->searchable(),
+                // Tables\Columns\TextColumn::make('locale')
+                //     ->searchable(),
                 ToggleColumn::make('is_approved'),
-                Tables\Columns\TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
+                Tables\Columns\TextColumn::make('jo_id')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('prod_id')
+                    ->searchable(),
+                // Tables\Columns\TextColumn::make('email_verified_at')
+                //     ->dateTime()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()
@@ -168,7 +182,11 @@ class UserResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()
+                        ->requiresConfirmation()
+                        ->modalHeading('Delete selected records?')
+                        ->modalDescription('This action is permanent and cannot be undone.')
+                        ->modalSubmitActionLabel('Yes, delete permanently'),
                 ]),
             ]);
     }
@@ -178,6 +196,14 @@ class UserResource extends Resource
         return [
             //
         ];
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        return parent::getEloquentQuery()
+            ->withoutGlobalScopes([
+                \Illuminate\Database\Eloquent\SoftDeletingScope::class,
+            ]);
     }
 
     public static function getPages(): array

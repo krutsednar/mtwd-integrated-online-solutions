@@ -6,17 +6,20 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class MCISPanelProvider extends PanelProvider
@@ -26,10 +29,13 @@ class MCISPanelProvider extends PanelProvider
         return $panel
             ->id('MCIS')
             ->path('MCIS')
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverResources(in: app_path('Filament/MCIS/Resources'), for: 'App\\Filament\\MCIS\\Resources')
             ->discoverPages(in: app_path('Filament/MCIS/Pages'), for: 'App\\Filament\\MCIS\\Pages')
             ->pages([
@@ -61,6 +67,9 @@ class MCISPanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
+            ])
+            ->plugins([
+            FilamentApexChartsPlugin::make()
             ]);
     }
 }

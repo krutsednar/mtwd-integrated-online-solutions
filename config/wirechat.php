@@ -88,7 +88,7 @@ return [
     |
     */
     'routes' => [
-        'prefix' => '/messenger',
+        'prefix' => 'messenger',
         'middleware' => ['web', 'auth:web'],
         'guards' => ['web'],
     ],
@@ -166,16 +166,17 @@ return [
     'attachments' => [
         'storage_folder' => 'attachments',
         'storage_disk' => 'public',
-        'disk_visibility' => 'public', // set to 'private' to always generate temporary URL
+        'disk_visibility' => 'public', // Use 'private' to enforce temporary URLs
+
         'max_uploads' => 10,
 
-        // Media Config
+        // Media Upload Settings
         'media_mimes' => ['png', 'jpg', 'jpeg', 'gif', 'mov', 'mp4'],
-        'media_max_upload_size' => 6144000, // 12 MB
+        'media_max_upload_size' => 12288, // Size in KB (12 MB)
 
-        // File Config
+        // File Upload Settings
         'file_mimes' => ['zip', 'rar', 'txt', 'pdf'],
-        'file_max_upload_size' => 6144000, // 12 MB
+        'file_max_upload_size' => 12288, // Size in KB (12 MB)
     ],
 
 ];

@@ -23,5 +23,9 @@ class Category extends Model
         'name'
     ];
 
+    public function jocodes()
+    {
+        return $this->hasMany(JobOrderCode::class, 'category_code', 'code');
+    }
 
 }

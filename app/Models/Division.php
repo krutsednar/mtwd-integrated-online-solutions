@@ -24,5 +24,14 @@ class Division extends Model
         'contact_number'
     ];
 
+    public function jocodes()
+    {
+        return $this->hasMany(JobOrderCode::class, 'division_code', 'code');
+    }
+
+    public function users()
+    {
+        return $this->hasMany(User::class, 'division_id', 'code');
+    }
 
 }

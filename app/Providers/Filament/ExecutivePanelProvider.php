@@ -2,21 +2,25 @@
 
 namespace App\Providers\Filament;
 
+use Auth;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class ExecutivePanelProvider extends PanelProvider
@@ -26,19 +30,21 @@ class ExecutivePanelProvider extends PanelProvider
         return $panel
             ->id('executive')
             ->path('executive')
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverResources(in: app_path('Filament/Executive/Resources'), for: 'App\\Filament\\Executive\\Resources')
             ->discoverPages(in: app_path('Filament/Executive/Pages'), for: 'App\\Filament\\Executive\\Pages')
             ->pages([
-                Pages\Dashboard::class,
+                // Pages\Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Executive/Widgets'), for: 'App\\Filament\\Executive\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
+                // Widgets\AccountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -62,6 +68,10 @@ class ExecutivePanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ]);
+            ])
+            ->plugins([
+            FilamentApexChartsPlugin::make()
+            ])
+            ->sidebarCollapsibleOnDesktop();
     }
 }

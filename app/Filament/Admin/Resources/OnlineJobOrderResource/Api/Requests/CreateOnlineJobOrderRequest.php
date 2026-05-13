@@ -11,7 +11,7 @@ class CreateOnlineJobOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('create_online::job::order');
     }
 
     /**
@@ -22,21 +22,20 @@ class CreateOnlineJobOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'jo_number' => 'required',
-			'date_requested' => 'required',
-			'account_number' => 'required',
-			'registered_name' => 'required',
-			'meter_number' => 'required',
-			'job_order_code' => 'required',
-			'address' => 'required',
-			'town' => 'required',
-			'barangay' => 'required',
-			'contact_number' => 'required',
-			'email' => 'required',
-			'mode_received' => 'required',
-			'remarks' => 'required|string',
-			'processed_by' => 'required',
-			'deleted_at' => 'required'
-		];
+            'jo_number'      => 'required|string|unique:online_job_orders,jo_number',
+            'date_requested' => 'required|date',
+            'account_number' => 'required|string',
+            'registered_name'=> 'required|string|max:255',
+            'meter_number'   => 'required|string',
+            'job_order_code' => 'required|string|exists:job_order_codes,code',
+            'address'        => 'required|string',
+            'town'           => 'required',
+            'barangay'       => 'required',
+            'contact_number' => 'nullable|string|max:20',
+            'email'          => 'nullable|email|max:255',
+            'mode_received'  => 'required|string',
+            'remarks'        => 'required|string',
+            'processed_by'   => 'required|string',
+        ];
     }
 }

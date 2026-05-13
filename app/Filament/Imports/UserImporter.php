@@ -1,0 +1,77 @@
+<?php
+
+namespace App\Filament\Imports;
+
+use App\Models\User;
+use Filament\Actions\Imports\ImportColumn;
+use Filament\Actions\Imports\Importer;
+use Filament\Actions\Imports\Models\Import;
+use Illuminate\Support\Facades\Hash;
+
+class UserImporter extends Importer
+{
+    protected static ?string $model = User::class;
+
+    public static function getColumns(): array
+    {
+        return [
+            ImportColumn::make('employee_number')
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
+            ImportColumn::make('name')
+                ->rules(['max:255']),
+            ImportColumn::make('first_name')
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
+            ImportColumn::make('middle_name')
+                ->rules(['max:255']),
+            ImportColumn::make('last_name')
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
+            ImportColumn::make('suffix')
+                ->rules(['max:255']),
+            ImportColumn::make('birthday')
+                ->rules(['nullable', 'date']),
+            ImportColumn::make('division_id')
+                ->rules(['nullable', 'max:255']),
+            ImportColumn::make('email')
+                ->rules(['nullable', 'email', 'max:255']),
+            ImportColumn::make('mobile_number')
+                ->rules(['nullable', 'max:255']),
+            ImportColumn::make('address')
+                ->rules(['nullable', 'max:255']),
+            // C8 fix: is_approved removed — imported users go through the approval workflow
+            ImportColumn::make('email_verified_at')
+                ->rules(['nullable', 'date']), // W-C fix: was ['email', 'datetime'] — always failed
+            ImportColumn::make('password')
+                ->requiredMapping()
+                ->rules(['required', 'max:255']),
+        ];
+    }
+
+    protected function mutateRecordData(array $data): array
+    {
+        if (!empty($data['password'])) {
+            $data['password'] = Hash::make($data['password']);
+        }
+
+        return $data;
+    }
+
+    // W-B fix: was `return new User()` — re-importing duplicated rows instead of updating
+    public function resolveRecord(): ?User
+    {
+        return User::firstOrNew(['employee_number' => $this->data['employee_number']]);
+    }
+
+    public static function getCompletedNotificationBody(Import $import): string
+    {
+        $body = 'Your user import has completed and ' . number_format($import->successful_rows) . ' ' . str('row')->plural($import->successful_rows) . ' imported.';
+
+        if ($failedRowsCount = $import->getFailedRowsCount()) {
+            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to import.';
+        }
+
+        return $body;
+    }
+}

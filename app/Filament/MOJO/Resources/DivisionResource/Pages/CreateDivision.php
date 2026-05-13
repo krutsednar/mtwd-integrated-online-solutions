@@ -9,6 +9,6 @@ use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class CreateDivision extends CreateRecord
 {
-    use HasPageShield;
+
     protected static string $resource = DivisionResource::class;
 }

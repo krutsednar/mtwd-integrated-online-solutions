@@ -25,7 +25,7 @@ class Statement extends Model
     }
 
 
-    protected $connection = 'mcpdb';
+    protected $connection = 'kitdb';
 
     public $table = 'statements';
 
@@ -83,13 +83,16 @@ class Statement extends Model
         'transmitted',
     ];
 
-    protected $dates = [
-        'reading_date',
-        'due_date',
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'reading_date' => 'date',
+            'due_date'     => 'date',
+            'created_at'   => 'datetime',
+            'updated_at'   => 'datetime',
+            'deleted_at'   => 'datetime',
+        ];
+    }
 
     protected $fillable = [
         'account_number',

@@ -35,4 +35,15 @@ return [
         ],
     ],
 
+    'google' => [
+        'maps_api_key' => env('GOOGLE_MAPS_API_KEY'),
+    ],
+
+    'online_hris' => [
+        'url'      => env('ONLINE_HRIS_URL'),
+        'email'    => env('ONLINE_HRIS_EMAIL'),
+        'password' => env('ONLINE_HRIS_PASSWORD'),
+        'token'    => env('ONLINE_HRIS_TOKEN'),
+    ],
+
 ];

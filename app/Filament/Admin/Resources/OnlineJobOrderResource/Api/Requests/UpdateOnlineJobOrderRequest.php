@@ -11,7 +11,7 @@ class UpdateOnlineJobOrderRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        return $this->user()->can('update_online::job::order');
     }
 
     /**
@@ -22,21 +22,20 @@ class UpdateOnlineJobOrderRequest extends FormRequest
     public function rules(): array
     {
         return [
-			'jo_number' => 'required',
-			'date_requested' => 'required',
-			'account_number' => 'required',
-			'registered_name' => 'required',
-			'meter_number' => 'required',
-			'job_order_code' => 'required',
-			'address' => 'required',
-			'town' => 'required',
-			'barangay' => 'required',
-			'contact_number' => 'required',
-			'email' => 'required',
-			'mode_received' => 'required',
-			'remarks' => 'required|string',
-			'processed_by' => 'required',
-			'deleted_at' => 'required'
-		];
+            'jo_number'      => 'sometimes|string|unique:online_job_orders,jo_number,' . $this->route('jo_number') . ',jo_number',
+            'date_requested' => 'sometimes|date',
+            'account_number' => 'sometimes|string',
+            'registered_name'=> 'sometimes|string|max:255',
+            'meter_number'   => 'sometimes|string',
+            'job_order_code' => 'sometimes|string|exists:job_order_codes,code',
+            'address'        => 'sometimes|string',
+            'town'           => 'sometimes',
+            'barangay'       => 'sometimes',
+            'contact_number' => 'nullable|string|max:20',
+            'email'          => 'nullable|email|max:255',
+            'mode_received'  => 'sometimes|string',
+            'remarks'        => 'sometimes|string',
+            'processed_by'   => 'sometimes|string',
+        ];
     }
 }

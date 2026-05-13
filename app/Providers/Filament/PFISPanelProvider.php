@@ -6,12 +6,14 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -26,10 +28,13 @@ class PFISPanelProvider extends PanelProvider
         return $panel
             ->id('PFIS')
             ->path('PFIS')
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverResources(in: app_path('Filament/PFIS/Resources'), for: 'App\\Filament\\PFIS\\Resources')
             ->discoverPages(in: app_path('Filament/PFIS/Pages'), for: 'App\\Filament\\PFIS\\Pages')
             ->pages([

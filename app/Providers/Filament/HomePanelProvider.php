@@ -6,19 +6,25 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
+use App\Filament\Pages\Auth\Login;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationItem;
 use App\Filament\Home\Pages\Auth\Register;
 use Filament\Http\Middleware\Authenticate;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
+use TomatoPHP\FilamentPWA\FilamentPWAPlugin;
 
 class HomePanelProvider extends PanelProvider
 {
@@ -27,8 +33,18 @@ class HomePanelProvider extends PanelProvider
         return $panel
             ->id('home')
             ->path('home')
-            ->login()
-            ->registration(Register::class)
+            ->login(Login::class)
+            ->favicon(asset('images/mios-logo.png'))
+            // ->registration(Register::class)
+            // ->plugin(\TomatoPHP\FilamentPWA\FilamentPWAPlugin::make())
+            ->plugin(
+                FilamentPWAPlugin::make()->allowPWASettings(auth()->check() && (
+                    auth()->user()->id === 1 || auth()->user()->hasRole('Super Admin')
+                ))
+            )
+            ->emailVerification()
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -64,6 +80,7 @@ class HomePanelProvider extends PanelProvider
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
                     ->sort(1),
-            ]);
+            ])
+            ->sidebarCollapsibleOnDesktop();
     }
 }

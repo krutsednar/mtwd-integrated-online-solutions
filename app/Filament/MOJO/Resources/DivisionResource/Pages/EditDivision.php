@@ -9,7 +9,6 @@ use BezhanSalleh\FilamentShield\Traits\HasPageShield;
 
 class EditDivision extends EditRecord
 {
-    use HasPageShield;
 
     protected static string $resource = DivisionResource::class;
 

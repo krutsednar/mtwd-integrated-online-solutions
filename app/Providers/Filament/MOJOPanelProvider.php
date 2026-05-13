@@ -6,17 +6,23 @@ use Filament\Pages;
 use Filament\Panel;
 use Filament\Widgets;
 use Filament\PanelProvider;
+use App\Filament\Pages\Profile;
 use Filament\Support\Colors\Color;
 use Filament\Navigation\NavigationItem;
 use Filament\Http\Middleware\Authenticate;
+use App\Filament\MOJO\Widgets\JobOrdersChart;
+use App\Filament\MOJO\Widgets\JobOrderOverview;
 use Illuminate\Session\Middleware\StartSession;
+use App\Filament\MOJO\Widgets\JobOrdersPerMonth;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Filament\Http\Middleware\AuthenticateSession;
+use App\Filament\AvatarProviders\GetAvatarProvider;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 
 class MOJOPanelProvider extends PanelProvider
@@ -26,6 +32,7 @@ class MOJOPanelProvider extends PanelProvider
         return $panel
             ->id('MOJO')
             ->path('MOJO')
+            ->favicon(asset('images/mios-logo.png'))
             ->login(\App\Filament\Pages\Auth\RedirectLogin::class)
             ->colors([
                 'primary' => Color::Blue,
@@ -35,10 +42,11 @@ class MOJOPanelProvider extends PanelProvider
             ->pages([
                 Pages\Dashboard::class,
             ])
+            ->profile(Profile::class, isSimple: false)
+            ->defaultAvatarProvider(GetAvatarProvider::class)
             ->discoverWidgets(in: app_path('Filament/MOJO/Widgets'), for: 'App\\Filament\\MOJO\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                // Widgets\FilamentInfoWidget::class,
+                JobOrderOverview::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -55,13 +63,20 @@ class MOJOPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->navigationItems([
+
                 NavigationItem::make('Messenger')
                     ->url(url('messenger'), shouldOpenInNewTab: true)
                     ->icon('heroicon-o-chat-bubble-left-right')
                     ->badge(
                         fn () => auth()->check() ? auth()->user()->getUnreadCount() : null
                     )
-                    ->sort(1),
-            ]);
+                    ->sort(999),
+
+            ])
+            ->plugins([
+            FilamentApexChartsPlugin::make()
+            ])
+            ->sidebarCollapsibleOnDesktop();
+
     }
 }

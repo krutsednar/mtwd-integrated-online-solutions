@@ -24,7 +24,7 @@ class Payment extends Model
         ->logFillable();
     }
 
-    protected $connection = 'mcpdb';
+    protected $connection = 'kitdb';
 
     public $table = 'payments';
 
@@ -56,11 +56,14 @@ class Payment extends Model
         'PaymentOption',
     ];
 
-    protected $dates = [
-        'created_at',
-        'updated_at',
-        'deleted_at',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'created_at' => 'datetime',
+            'updated_at' => 'datetime',
+            'deleted_at' => 'datetime',
+        ];
+    }
 
     protected $fillable = [
         'AccountNumber',
