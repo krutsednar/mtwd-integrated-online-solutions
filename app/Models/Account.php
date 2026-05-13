@@ -22,7 +22,7 @@ class Account extends Model
         ->logFillable();
     }
 
-    // protected $connection = 'kitdb';
+    protected $connection = 'kitdb';
 
     public $table = 'accounts';
 
