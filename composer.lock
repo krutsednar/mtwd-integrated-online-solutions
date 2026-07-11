@@ -5148,11 +5148,11 @@
         },
         {
             "name": "mtwd/mios-sync-client",
-            "version": "1.0.0",
+            "version": "1.0.1",
             "dist": {
                 "type": "path",
                 "url": "packages/mios-sync-client",
-                "reference": "2cf4852e496e26de3b77af0e411cca1cbe85eafa"
+                "reference": "62aec642fa3a952aa3b0875aa082a5dc301a8ed6"
             },
             "require": {
                 "illuminate/database": "^9.0|^10.0|^11.0|^12.0",

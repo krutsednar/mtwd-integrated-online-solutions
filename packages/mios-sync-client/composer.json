@@ -2,7 +2,7 @@
     "name": "mtwd/mios-sync-client",
     "description": "Transactional sync outbox for the MTWD legacy apps: records which rows changed so MIOS can pull them over SSH. No HTTP, no credentials, no payloads.",
     "type": "library",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "license": "proprietary",
     "require": {
         "php": "^8.0.2",

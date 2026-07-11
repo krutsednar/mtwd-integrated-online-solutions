@@ -23,9 +23,12 @@ class MiosSyncServiceProvider extends ServiceProvider
             return;
         }
 
-        foreach ((array) config('mios-sync.observe') as $model => $resource) {
+        // Register by CLASS NAME only — Eloquent re-resolves observers from the
+        // container per event, so instances (and constructor args) don't survive.
+        // The observer looks its resource slug up from config per event.
+        foreach (array_keys((array) config('mios-sync.observe')) as $model) {
             if (class_exists($model)) {
-                $model::observe(new OutboxObserver(is_array($resource) ? $resource['resource'] : $resource));
+                $model::observe(OutboxObserver::class);
             }
         }
     }
