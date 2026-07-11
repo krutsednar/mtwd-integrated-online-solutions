@@ -1,0 +1,25 @@
+{
+    "name": "mtwd/mios-sync-client",
+    "description": "Transactional sync outbox for the MTWD legacy apps: records which rows changed so MIOS can pull them over SSH. No HTTP, no credentials, no payloads.",
+    "type": "library",
+    "version": "1.0.0",
+    "license": "proprietary",
+    "require": {
+        "php": "^8.0.2",
+        "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+        "illuminate/database": "^9.0|^10.0|^11.0|^12.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Mtwd\\MiosSyncClient\\": "src/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Mtwd\\MiosSyncClient\\MiosSyncServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable"
+}

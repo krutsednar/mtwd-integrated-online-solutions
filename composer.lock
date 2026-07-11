@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "e4e6777e2919de530e6bd74895f64020",
+    "content-hash": "befb83072ed32ef681ac02de631bc6b9",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -5145,6 +5145,41 @@
                 }
             ],
             "time": "2025-03-24T10:02:05+00:00"
+        },
+        {
+            "name": "mtwd/mios-sync-client",
+            "version": "1.0.0",
+            "dist": {
+                "type": "path",
+                "url": "packages/mios-sync-client",
+                "reference": "2cf4852e496e26de3b77af0e411cca1cbe85eafa"
+            },
+            "require": {
+                "illuminate/database": "^9.0|^10.0|^11.0|^12.0",
+                "illuminate/support": "^9.0|^10.0|^11.0|^12.0",
+                "php": "^8.0.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Mtwd\\MiosSyncClient\\MiosSyncServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Mtwd\\MiosSyncClient\\": "src/"
+                }
+            },
+            "license": [
+                "proprietary"
+            ],
+            "description": "Transactional sync outbox for the MTWD legacy apps: records which rows changed so MIOS can pull them over SSH. No HTTP, no credentials, no payloads.",
+            "transport-options": {
+                "symlink": false,
+                "relative": true
+            }
         },
         {
             "name": "myclabs/deep-copy",
@@ -14467,12 +14502,12 @@
     ],
     "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [],
+    "stability-flags": {},
     "prefer-stable": true,
     "prefer-lowest": false,
     "platform": {
         "php": "^8.2"
     },
-    "platform-dev": [],
-    "plugin-api-version": "2.6.0"
+    "platform-dev": {},
+    "plugin-api-version": "2.9.0"
 }
